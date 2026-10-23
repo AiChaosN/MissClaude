@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her facial expression: an awkward embarrassed smile - eyes looking away to the side, a stiff wavy forced smile, light blush. Head position, bangs and hair unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a163a5-2bab-7432-bd8a-467a33fd4313",
+  "source": "~/.codex/generated_images/01a163a5-2bab-7432-bd8a-467a33fd4313/exec-834d4b1a-9d05-4265-8f6a-cd532d15c77f.png",
+  "seconds": 64.2
+}

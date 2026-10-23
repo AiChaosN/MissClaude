@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: add back ONLY her right arm (on the viewer's left) hugging her brown book flat against her chest, the forearm across the book and the white-gloved hand holding its far edge, as when shy or sad. Match her other sleeve exactly in style and colour (puffy cream sleeve with a small orange flower print, frilled cuff, white glove, dark brown line art) and keep the book exactly as before: dark brown leather with an orange flower emblem and gold corners. Keep her face, eyes, expression, hair and the white background unchanged.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

@@ -1,0 +1,4 @@
+Use case: precise-object-edit
+Asset type: background prop layer for a desktop-pet rig; must stay pixel-aligned with Image 1
+Input images: Image 1: edit target
+Change: remove the girl completely - her hair, body, clothes, arms and boots - leaving only the empty wooden stool, the wooden desk and the things on the desk (paper, open book, ink pot) exactly where they are. Draw the parts of the stool and the desk that she was hiding (the stool seat and legs, the desk's front edge and legs), and put a quill pen lying on the paper. Keep the flat chroma-green background and everything else unchanged and pixel-aligned with Image 1.

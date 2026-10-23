@@ -1,0 +1,5 @@
+Use case: precise-object-edit (segmentation mask)
+Asset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1
+Input images: Image 1: edit target
+Change: recolor ONLY her two legs below the skirt - the visible parts of both legs and both white lace-up boots including laces, heels and soles - to one flat, uniform pure blue (#0000FF) with no shading or lines inside. Do NOT recolor the skirt, the petticoat frills, the shadow under the skirt, the hair or anything else; the green background stays green.
+Keep the image pixel-aligned with Image 1: same canvas, same silhouette; only the legs' colour changes.

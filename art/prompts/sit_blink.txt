@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: ONLY her eyes: close both eyes gently (soft downward-curved closed-eye lash lines in the same lash style), as in a blink while reading. Keep the flat chroma-green background and keep her mouth, blush, bangs, head position and the book unchanged.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

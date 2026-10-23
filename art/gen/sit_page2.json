@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY the open book and her hand on the viewer's right: a single page is in the middle of being turned - it stands up curved above the middle of the book, its top corner held between her gloved fingertips. Everything else unchanged.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/sit_read.png"
+  ],
+  "thread_id": "01a163a4-e6af-73a2-99eb-0735941c4641",
+  "source": "~/.codex/generated_images/01a163a4-e6af-73a2-99eb-0735941c4641/exec-893c57f7-7e34-44fd-993a-5db7b0856fa8.png",
+  "seconds": 104.9
+}

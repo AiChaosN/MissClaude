@@ -1,0 +1,8 @@
+{
+  "name": "missclaude",
+  "productName": "MissClaude",
+  "version": "0.3.0",
+  "description": "Claude as a desktop pet",
+  "main": "main.js",
+  "private": true
+}

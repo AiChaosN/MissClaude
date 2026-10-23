@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her eyes: close both eyes gently (soft downward-curved closed-eye lash lines in the same lash style), as in a blink while reading. Keep the flat chroma-green background and keep her mouth, blush, bangs, head position and the book unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/sit_read.png"
+  ],
+  "thread_id": "01a162a8-dba8-7a80-b680-70f1ba6a070c",
+  "source": "~/.codex/generated_images/01a162a8-dba8-7a80-b680-70f1ba6a070c/exec-51a5335e-ebb2-428d-8b46-6714077c8b1d.png",
+  "seconds": 75.2
+}

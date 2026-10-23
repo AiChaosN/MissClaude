@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her eyes: remove the irises, pupils and their highlights from both eyes so that each eye shows only the plain white of the eye inside the eyelids. Keep the eyelids, the thick dark upper lashes, the lower lash line and the outline and shape of each eye exactly as they are.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/work_rm_bangs.png"
+  ],
+  "thread_id": "01a1641f-58f1-7131-b66f-f01fea2a6b9e",
+  "source": "~/.codex/generated_images/01a1641f-58f1-7131-b66f-f01fea2a6b9e/exec-eddcc94c-3a1e-486c-83f3-bb845b726319.png",
+  "seconds": 86.7
+}

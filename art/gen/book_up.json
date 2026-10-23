@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: add back ONLY her right arm (on the viewer's left) holding her brown book up in front of her face so that the book covers her mouth and chin while her eyes and nose stay visible above it, as when hiding shyly behind it; the white-gloved hand holds the book's lower edge. Match her other sleeve exactly in style and colour (puffy cream sleeve with a small orange flower print, frilled cuff, white glove, dark brown line art) and keep the book exactly as before: dark brown leather with an orange flower emblem and gold corners. Keep her face, eyes, expression, hair and the white background unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/rm_arm_book.png"
+  ],
+  "thread_id": "01a163a4-2bba-7ce3-bd5a-1076976e04a0",
+  "source": "~/.codex/generated_images/01a163a4-2bba-7ce3-bd5a-1076976e04a0/exec-b82689fe-8ccf-40ae-b97d-c306a6e61e1a.png",
+  "seconds": 43.3
+}

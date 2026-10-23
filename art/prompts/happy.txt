@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: ONLY her facial expression: eyes closed in happy upward-arched curves (a ^ ^ smile-eyes shape) with the same lash style, mouth open in a big joyful smile, slightly stronger pink blush on both cheeks. Head position, bangs and hair unchanged.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

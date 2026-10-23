@@ -1,0 +1,14 @@
+{
+  "name": "missclaude",
+  "version": "0.3.0",
+  "description": "Claude as a desktop pet: skeletal animation, an action library and a local API so other products can drive her",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/ && python3 tests/interaction_test.py",
+    "test:core": "node --test tests/",
+    "assets": "python3 tools/build_assets.py && python3 tools/build_rig.py && python3 tools/export_assets.py",
+    "deploy": "tools/deploy_windows.sh",
+    "preview": "python3 tools/preview.py /tmp/missclaude-preview"
+  },
+  "engines": { "node": ">=20" }
+}

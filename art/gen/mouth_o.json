@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her mouth: a round open 'o' as when saying 'oh' - medium sized, soft pink inside. Keep her eyes, eyebrows, blush, bangs and head position unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a16376-1a5a-7361-83c3-31c7cd3568de",
+  "source": "~/.codex/generated_images/01a16376-1a5a-7361-83c3-31c7cd3568de/exec-0ec4f009-9b55-4aaf-b903-d53c416ea1a4.png",
+  "seconds": 68.8
+}

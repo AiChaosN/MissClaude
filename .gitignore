@@ -1,0 +1,12 @@
+# derived art: rebuilt from art/source + art/gen by tools/build_assets.py,
+# tools/build_rig.py and tools/export_assets.py (deterministic, ~4 min)
+art/work/
+art/gen/logs/
+
+__pycache__/
+*.pyc
+node_modules/
+.server.log
+.DS_Store
+Thumbs.db
+dist/

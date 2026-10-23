@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her facial expression: about to cry - big glistening eyes with tears welling up at the lower lids, eyebrows raised in the middle, a trembling wavy mouth. Head position, bangs and hair unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a163a5-d425-7701-b22f-7d01829e0ac7",
+  "source": "~/.codex/generated_images/01a163a5-d425-7701-b22f-7d01829e0ac7/exec-817c0312-b031-4fd9-a285-79edc560c958.png",
+  "seconds": 70.7
+}

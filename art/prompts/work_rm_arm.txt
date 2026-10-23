@@ -1,0 +1,6 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: remove ONLY her writing arm - the arm nearest to the viewer, from the shoulder down: the puffy sleeve, the frilled cuff, the white-gloved hand - together with the quill pen it holds, as if that arm were hidden behind her. Where it was, draw what is behind it: the side of her blouse and corset, her skirt, and the desk top with the sheet of paper continuing naturally. Keep her other hand on the paper.
+Background: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

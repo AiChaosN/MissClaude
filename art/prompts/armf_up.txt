@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: add back ONLY her left arm (on the viewer's right), raised straight up above her head as when eagerly raising a hand or stretching: the puffy sleeve starts at her shoulder, the arm goes up beside her head with the elbow only slightly bent, the open white-gloved hand high above her head, palm toward the viewer, fingers together. Match her other sleeve exactly in style and colour: puffy cream sleeve with a small orange flower print, frilled cuff, white glove, dark brown line art. Keep her face, eyes, expression, hair and the white background unchanged.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

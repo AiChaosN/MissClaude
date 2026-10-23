@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: ONLY her cheeks: a much stronger, rosy pink blush on both cheeks with a few short diagonal shy lines (anime blush hatching) drawn over each cheek. Eyes, mouth, eyebrows, bangs and everything else unchanged.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

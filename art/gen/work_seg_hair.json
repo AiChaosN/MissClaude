@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: precise-object-edit (segmentation mask)\nAsset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1\nInput images: Image 1: edit target\nChange: recolor ALL of her hair - the long hair, the bangs, the side locks, the braid and the hair on top of her head - to one flat, uniform pure magenta (#FF00FF) with no shading, highlights or lines inside it. Do NOT recolor anything that is not hair: face, ears, skin, eyes, ribbons, bow, flower ornament, earrings, clothes, gloves, desk, stool, paper, book, ink pot, boots. Keep the flat chroma-green background and everything else unchanged and pixel-aligned with Image 1.",
+  "refs": [
+    "art/gen/work.png"
+  ],
+  "thread_id": "01a163a9-1584-74b3-b83f-5dc9a90475c5",
+  "source": "~/.codex/generated_images/01a163a9-1584-74b3-b83f-5dc9a90475c5/exec-78499282-4075-458a-8720-f4c5453e4789.png",
+  "seconds": 53.5
+}

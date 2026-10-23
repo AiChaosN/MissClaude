@@ -1,0 +1,5 @@
+Use case: precise-object-edit (segmentation mask)
+Asset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1
+Input images: Image 1: edit target
+Change: recolor ONLY the small things that dangle from her dress to one flat, uniform pure cyan (#00FFFF) with no shading or lines inside: the two gold tassels hanging below the black bows on her skirt (each with its little gold cap), and at the centre of her black corset the gold ring, the small gold chain charm, the two short orange-red cords and the gold tassel hanging from them. Do NOT recolor the bows, the orange flowers, the skirt panels, the corset, the chain across the corset or anything else; the white background stays white.
+Keep the image pixel-aligned with Image 1: same canvas and silhouette; only those dangling pieces change colour.

@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove ONLY her free arm on the viewer's right (the puffy sleeve, frilled cuff and the white-gloved hand swinging behind her), as if it were hidden behind her back. Where it was, draw what is behind it: the side of her blouse and dress, the skirt and the long orange hair, continuing them naturally; where only background was behind it, keep the flat chroma-green background. Keep the arm holding the book unchanged.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/walk.png"
+  ],
+  "thread_id": "01a16346-9c89-7002-a191-20e65d49c942",
+  "source": "~/.codex/generated_images/01a16346-9c89-7002-a191-20e65d49c942/exec-680e344d-2f25-4bbd-8726-e7fd62a36e08.png",
+  "seconds": 89.1
+}

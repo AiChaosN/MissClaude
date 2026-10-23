@@ -1,0 +1,6 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: ONLY her free arm (her left arm, on the viewer's right, currently hanging down with an open gloved hand): raise it so the hand is beside her head at about eye height, waving at the viewer - elbow bent, forearm pointing up, open palm facing the viewer, fingers together, hand tilted slightly outward. The frilled cuff and sleeve follow the arm. Where the arm used to be, show the hair and dress that were behind it. Her other hand keeps holding the book exactly as before; her face stays exactly the same.
+Background: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

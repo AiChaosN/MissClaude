@@ -1,0 +1,8 @@
+{
+  "prompt": "Use your image generation tool to EDIT the attached illustration. Make exactly ONE change: the character's eyes are gently closed (a relaxed blink - soft downward-curved closed-eye lash lines in the same eyelash style, same blush). Keep EVERYTHING else identical to the attached image: same pose, framing, canvas size, character size and position, hair, outfit, colors, line art, white background and decorations.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a16298-a8b3-7f93-a5e9-9bcc1950b0d7",
+  "note": "first test generation, run by hand before tools/codex_imagegen.py existed"
+}

@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her cheeks: a much stronger, rosy pink blush on both cheeks with a few short diagonal shy lines (anime blush hatching) drawn over each cheek. Eyes, mouth, eyebrows, bangs and everything else unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a163a4-9875-73a2-803f-f6ca2d1c8953",
+  "source": "~/.codex/generated_images/01a163a4-9875-73a2-803f-f6ca2d1c8953/exec-42dbff9d-837d-4648-9907-77c9bc04a189.png",
+  "seconds": 67.2
+}

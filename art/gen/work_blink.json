@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her eyes: close both eyes gently, as in a blink - soft downward-curved closed-eye lash lines in the same lash style. Mouth, blush, bangs and head position unchanged.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/work.png"
+  ],
+  "thread_id": "01a163a9-d70e-7872-990c-a5f967a0ae2f",
+  "source": "~/.codex/generated_images/01a163a9-d70e-7872-990c-a5f967a0ae2f/exec-fcb947fc-57e3-4381-a166-c1d79a5d5f17.png",
+  "seconds": 58.9
+}

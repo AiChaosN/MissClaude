@@ -1,0 +1,334 @@
+{
+ "exportScale": 0.5,
+ "sprites": {
+  "idle": {
+   "file": "sprites/idle.png",
+   "w": 606,
+   "h": 623,
+   "head": [
+    290.0,
+    167.5
+   ],
+   "foot": [
+    290.0,
+    617.5
+   ],
+   "group": "idle",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 1.0
+  },
+  "wave_a": {
+   "file": "sprites/wave_a.png",
+   "w": 606,
+   "h": 623,
+   "head": [
+    290.0,
+    167.5
+   ],
+   "foot": [
+    290.0,
+    617.5
+   ],
+   "group": "idle",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 1.0
+  },
+  "wave_b": {
+   "file": "sprites/wave_b.png",
+   "w": 606,
+   "h": 623,
+   "head": [
+    290.0,
+    167.5
+   ],
+   "foot": [
+    290.0,
+    617.5
+   ],
+   "group": "idle",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 1.0
+  },
+  "think": {
+   "file": "sprites/think.png",
+   "w": 606,
+   "h": 623,
+   "head": [
+    290.0,
+    167.5
+   ],
+   "foot": [
+    290.0,
+    617.5
+   ],
+   "group": "idle",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 1.0
+  },
+  "walk": {
+   "file": "sprites/walk.png",
+   "w": 553,
+   "h": 623,
+   "head": [
+    374.5,
+    158.5
+   ],
+   "foot": [
+    374.5,
+    618.5
+   ],
+   "group": "walk",
+   "sway": "sprites/walk_sway.png",
+   "swayAmp": 1.0
+  },
+  "cheer": {
+   "file": "sprites/cheer.png",
+   "w": 621,
+   "h": 592,
+   "head": [
+    299.0,
+    162.0
+   ],
+   "foot": [
+    299.0,
+    587.0
+   ],
+   "group": "cheer",
+   "sway": "sprites/cheer_sway.png",
+   "swayAmp": 1.0
+  },
+  "drag": {
+   "file": "sprites/drag.png",
+   "w": 540,
+   "h": 695,
+   "head": [
+    265.5,
+    166.2
+   ],
+   "foot": [
+    265.5,
+    690.0
+   ],
+   "group": "drag",
+   "sway": "sprites/drag_sway.png",
+   "swayAmp": 1.2
+  },
+  "sit_read": {
+   "file": "sprites/sit_read.png",
+   "w": 612,
+   "h": 594,
+   "head": [
+    287.2,
+    177.5
+   ],
+   "foot": [
+    287.2,
+    589.0
+   ],
+   "group": "sit",
+   "sway": "sprites/sit_sway.png",
+   "swayAmp": 0.45
+  },
+  "work": {
+   "file": "sprites/work.png",
+   "w": 653,
+   "h": 689,
+   "head": [
+    345.2,
+    180.2
+   ],
+   "foot": [
+    345.2,
+    683.2
+   ],
+   "group": "work",
+   "sway": "sprites/work_sway.png",
+   "swayAmp": 0.5
+  }
+ },
+ "faces": {
+  "idle": {
+   "blink": {
+    "file": "faces/idle_blink.png",
+    "group": "eyes",
+    "x": 205,
+    "y": 125
+   },
+   "half": {
+    "file": "faces/idle_half.png",
+    "group": "eyes",
+    "x": 205,
+    "y": 125
+   },
+   "look_left": {
+    "file": "faces/idle_look_left.png",
+    "group": "eyes",
+    "x": 212,
+    "y": 137
+   },
+   "look_right": {
+    "file": "faces/idle_look_right.png",
+    "group": "eyes",
+    "x": 228,
+    "y": 147
+   },
+   "talk": {
+    "file": "faces/idle_talk.png",
+    "group": "mouth",
+    "x": 286,
+    "y": 208
+   },
+   "happy": {
+    "file": "faces/idle_happy.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "surprised": {
+    "file": "faces/idle_surprised.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "pout": {
+    "file": "faces/idle_pout.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "look_up": {
+    "file": "faces/idle_look_up.png",
+    "group": "eyes",
+    "x": 205,
+    "y": 125
+   },
+   "wink": {
+    "file": "faces/idle_wink.png",
+    "group": "eyes",
+    "x": 205,
+    "y": 125
+   },
+   "blush": {
+    "file": "faces/idle_blush.png",
+    "group": "cheeks",
+    "x": 205,
+    "y": 177
+   },
+   "angry": {
+    "file": "faces/idle_angry.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "smirk": {
+    "file": "faces/idle_smirk.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "awkward": {
+    "file": "faces/idle_awkward.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "teary": {
+    "file": "faces/idle_teary.png",
+    "group": "face",
+    "x": 205,
+    "y": 125
+   },
+   "mouth_a": {
+    "file": "faces/idle_mouth_a.png",
+    "group": "mouth",
+    "x": 275,
+    "y": 202
+   },
+   "mouth_i": {
+    "file": "faces/idle_mouth_i.png",
+    "group": "mouth",
+    "x": 279,
+    "y": 207
+   },
+   "mouth_u": {
+    "file": "faces/idle_mouth_u.png",
+    "group": "mouth",
+    "x": 275,
+    "y": 212
+   },
+   "mouth_e": {
+    "file": "faces/idle_mouth_e.png",
+    "group": "mouth",
+    "x": 285,
+    "y": 206
+   },
+   "mouth_o": {
+    "file": "faces/idle_mouth_o.png",
+    "group": "mouth",
+    "x": 275,
+    "y": 211
+   }
+  },
+  "sit": {
+   "blink": {
+    "file": "faces/sit_blink.png",
+    "group": "eyes",
+    "x": 200,
+    "y": 138
+   },
+   "sleep": {
+    "file": "faces/sit_sleep.png",
+    "group": "face",
+    "x": 200,
+    "y": 138
+   },
+   "page1": {
+    "file": "faces/sit_page1.png",
+    "group": "book",
+    "x": 158,
+    "y": 255
+   },
+   "page2": {
+    "file": "faces/sit_page2.png",
+    "group": "book",
+    "x": 158,
+    "y": 255
+   }
+  },
+  "walk": {
+   "blink": {
+    "file": "faces/walk_blink.png",
+    "group": "eyes",
+    "x": 288,
+    "y": 132
+   }
+  },
+  "desk": {
+   "blink": {
+    "file": "faces/desk_blink.png",
+    "group": "eyes",
+    "x": 267,
+    "y": 179
+   },
+   "think": {
+    "file": "faces/desk_think.png",
+    "group": "face",
+    "x": 267,
+    "y": 179
+   },
+   "happy": {
+    "file": "faces/desk_happy.png",
+    "group": "face",
+    "x": 267,
+    "y": 179
+   }
+  }
+ },
+ "rigs": {
+  "stand": "rig_stand.json",
+  "walk": "rig_walk.json",
+  "sit": "rig_sit.json",
+  "drag": "rig_drag.json",
+  "work": "rig_work.json"
+ }
+}

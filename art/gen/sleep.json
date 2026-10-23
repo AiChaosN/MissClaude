@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her face: she has dozed off while reading - eyes peacefully closed (relaxed closed lash curves), mouth slightly open in a tiny relaxed sleepy 'o', a soft blush. Keep the flat chroma-green background and keep the head position, bangs, hands and the book unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/sit_read.png"
+  ],
+  "thread_id": "01a162a8-dbab-7b90-ba44-30012907fc5a",
+  "source": "~/.codex/generated_images/01a162a8-dbab-7b90-ba44-30012907fc5a/exec-437f328c-5b52-4e1c-bec4-a13cb3b98ff0.png",
+  "seconds": 73.8
+}

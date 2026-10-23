@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her left eye (on the viewer's right): close it in a cute playful wink - a happy upward-curved closed-eye line with the same thick lashes. Her other eye stays open exactly as it is. Mouth, blush, eyebrows, bangs and head position unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a163a4-6364-7602-8724-3d3290a0d171",
+  "source": "~/.codex/generated_images/01a163a4-6364-7602-8724-3d3290a0d171/exec-dcc8c039-50f0-46e7-8d4e-19452e685d7d.png",
+  "seconds": 76.3
+}

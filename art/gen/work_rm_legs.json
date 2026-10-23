@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove ONLY her two legs and both white lace-up boots below the skirt, as if her legs were fully hidden under the skirt. Under the frilly hem continue the soft shadow of the inside of the skirt; where the lower legs and boots were, show the stool legs and the desk legs that were behind them, or the flat chroma-green background.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/work.png"
+  ],
+  "thread_id": "01a163ae-0647-72d1-b29d-811807313239",
+  "source": "~/.codex/generated_images/01a163ae-0647-72d1-b29d-811807313239/exec-8370f4fc-7a90-46d6-b316-c6eabdc501ce.png",
+  "seconds": 50.6
+}

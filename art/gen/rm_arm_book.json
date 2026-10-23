@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove ONLY her book-holding arm (on the viewer's left: sleeve, frilled cuff and gloved hand) together with the brown book. Where they were, draw what is behind them: her blouse, the collar frills, the black cravat, the corset and the long orange hair, continuing the existing strands and fabric naturally. Keep the white background.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a1632a-354b-79d2-a964-471af5504540",
+  "source": "~/.codex/generated_images/01a1632a-354b-79d2-a964-471af5504540/exec-30aebb8d-e59b-4cab-9d60-f149ba205987.png",
+  "seconds": 55.6
+}

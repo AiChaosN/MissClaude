@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: add back ONLY her left arm (on the viewer's right) in a cheerful 'let's do our best!' pose: the elbow bent and tucked in at her side, a small white-gloved fist raised to shoulder height, knuckles toward the viewer. Match her other sleeve exactly in style and colour: puffy cream sleeve with a small orange flower print, frilled cuff, white glove, dark brown line art. Keep her face, eyes, expression, hair and the white background unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/rm_arm_free.png"
+  ],
+  "thread_id": "01a163a3-898e-78a0-97ac-43f1f1ea93e2",
+  "source": "~/.codex/generated_images/01a163a3-898e-78a0-97ac-43f1f1ea93e2/exec-b46a7b47-3bc5-4a8f-8883-0472ceebac55.png",
+  "seconds": 75.4
+}

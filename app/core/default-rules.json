@@ -1,0 +1,39 @@
+[
+  {
+    "id": "usage-half",
+    "signal": "claude.usage",
+    "when": [{ "path": "percent", "op": "crosses_above", "value": 50 }],
+    "say": "额度用掉一半啦（{percent}%）",
+    "action": "look_around",
+    "cooldown": 1800
+  },
+  {
+    "id": "usage-high",
+    "signal": "claude.usage",
+    "when": [
+      { "path": "percent", "op": ">=", "value": 80 },
+      { "path": "percent", "op": "<", "value": 95 }
+    ],
+    "say": "额度已经用了 {percent}%，悠着点哦～",
+    "action": "awkward",
+    "priority": "high",
+    "cooldown": 3600
+  },
+  {
+    "id": "usage-critical",
+    "signal": "claude.usage",
+    "when": [{ "path": "percent", "op": ">=", "value": 95 }],
+    "say": "额度用了 {percent}%，快见底啦！",
+    "action": "sad",
+    "priority": "high",
+    "cooldown": 1800
+  },
+  {
+    "id": "usage-reset",
+    "signal": "claude.usage",
+    "when": [{ "path": "percent", "op": "crosses_below", "value": 10 }],
+    "say": "额度刷新啦，冲！",
+    "action": "cheer_on",
+    "cooldown": 600
+  }
+]

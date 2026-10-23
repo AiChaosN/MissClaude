@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her eyes: both eyes half-closed, as in the middle of a blink - the upper eyelids with the same thick dark lashes lowered to cover the upper half of the irises. Keep her eyebrows, mouth (the same small closed smile), blush, bangs and head position unchanged.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a1629f-0ffe-7a22-afac-d03dc42f48f6",
+  "source": "~/.codex/generated_images/01a1629f-0ffe-7a22-afac-d03dc42f48f6/exec-af4b010e-8c7b-4606-8a6d-84d7456984d8.png",
+  "seconds": 91.9
+}

@@ -1,0 +1,5 @@
+Use case: background-extraction
+Asset type: desktop-pet sprite source (will be chroma-keyed to transparency)
+Input images: Image 1: edit target
+Change: replace ONLY the background. Background: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her. Also remove the soft orange ground shadow and the petals lying under her boots.
+The character must stay 100% unchanged and pixel-aligned with Image 1: identical pose, position, scale, silhouette, line art, colors, shading, every hair strand, ribbon, tassel and frill.

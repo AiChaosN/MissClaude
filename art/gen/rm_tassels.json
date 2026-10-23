@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove ONLY the small things that dangle from her dress: the gold tassels hanging below the two black bows on her skirt, and the orange tassel with the gold chain charm hanging at the centre of her black corset. Draw the skirt fabric, embroidery and folds that were behind them, continuing naturally. Keep the bows, the orange flowers on them and everything else.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a16376-642f-7522-b91e-3668fc6be6be",
+  "source": "~/.codex/generated_images/01a16376-642f-7522-b91e-3668fc6be6be/exec-e4d0d02a-5d24-4b72-96ec-a92066cae07f.png",
+  "seconds": 110.5
+}

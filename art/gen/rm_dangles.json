@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove ONLY the things that hang down: the two cream ribbon tails, the gold tassel and the orange cord hanging below her black hair bow, and the dangling tassel earring under her ear. Where they were, draw the long orange hair and the ear behind them, continuing the strands naturally. Keep the black bow knot, the flower ornament and the white background.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/source/chibi_ref.png"
+  ],
+  "thread_id": "01a1632a-354b-7f93-a25e-d2fb779d33ed",
+  "source": "~/.codex/generated_images/01a1632a-354b-7f93-a25e-d2fb779d33ed/exec-899d91a2-09f2-41d5-8c35-b9db2b802b85.png",
+  "seconds": 67.8
+}

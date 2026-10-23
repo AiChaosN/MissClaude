@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: remove ONLY her book-holding arm (on the viewer's left: sleeve, frilled cuff and gloved hand) together with the brown book. Where they were, draw what is behind them: her blouse, the collar frills, the black cravat, the corset and the long orange hair, continuing the existing strands and fabric naturally. Keep the white background.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.

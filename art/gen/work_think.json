@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY her writing arm and her face: she pauses to think - the hand holding the quill is raised so the feather end of the quill touches her chin, elbow resting on the desk, and her eyes look up toward the upper right while she purses her lips in thought. Keep the other arm, the paper, the desk and everything else unchanged.\nBackground: replace the background with a perfectly flat, uniform chroma-key green (#00FF00) that fills the entire canvas edge to edge - no gradient, no ground, no cast shadow, no decorations (remove all floating flowers, sparkles and petals), no text, no watermark. Keep the character's dark outline crisp, with no green spill or glow on her.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, character position and scale, line art, colors, shading, every hair strand, ribbon, tassel, frill and accessory.",
+  "refs": [
+    "art/gen/work.png"
+  ],
+  "thread_id": "01a163a9-e6a8-7162-945e-7f4a1ed47bd2",
+  "source": "~/.codex/generated_images/01a163a9-e6a8-7162-945e-7f4a1ed47bd2/exec-28f47d50-82a1-4d8d-880b-bd6205476fed.png",
+  "seconds": 61.6
+}
