@@ -44,11 +44,20 @@ test('default usage rules: 83% says something, the 95% rule takes over', () => {
   assert.deepEqual(e.push('claude.usage', { percent: 3 }, 2000).map((f) => f.rule), ['usage-reset']);
 });
 
-test('the controller knows every action in the renderer library', async () => {
-  const { ACTION_NAMES, validateActions } = await import('../app/renderer/actions.js');
-  const { LIBRARY_ACTIONS } = require('../app/core/controller');
-  assert.deepEqual([...LIBRARY_ACTIONS].sort(), [...ACTION_NAMES].sort());
-  assert.deepEqual(validateActions(), []);
+test('each character pack lists every action of its library', async () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'app', 'characters');
+  const packs = fs.readdirSync(dir).filter((n) => fs.existsSync(path.join(dir, n, 'character.json')));
+  assert.ok(packs.includes('claude'));
+  for (const name of packs) {
+    const info = require(path.join(dir, name, 'character.json'));
+    const { ACTION_NAMES, validateActions } = await import(`../app/characters/${name}/actions.js`);
+    assert.equal(info.name, name);
+    assert.deepEqual([...info.library].sort(), [...ACTION_NAMES].sort(), `${name}: library list`);
+    assert.deepEqual(validateActions(), [], `${name}: actions`);
+    for (const key of ['window', 'sizes', 'menu', 'actions', 'expressions']) assert.ok(info[key], `${name}: ${key}`);
+  }
 });
 
 test('controller turns a signal into renderer commands and output events', () => {

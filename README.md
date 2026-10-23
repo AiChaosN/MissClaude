@@ -46,14 +46,14 @@ tools/deploy_windows.sh --shortcut
 | 新的**台词池** | 规则的 `say` 写成列表，随机挑一句 | 不用 |
 | 产品对她的**反应**（点她贪睡、摸头确认） | 订阅 `click` / `pet` / `drop` 等事件 | 不用 |
 | 一个**新的基础动作**（新的手臂姿势、新表情） | 让 GPT 画一张对齐的改图 → `tools/build_rig.py` 的 `ARM_VARIANTS` / `build_assets.py` 的脸部表 → `actions.js` 加一条时间轴 | 要改，约 15 分钟一个 |
-| **换角色** | 整条素材管线重跑一遍（见"素材管线"） | 要改，工作量大 |
+| **换角色** | 加一个角色包 `app/characters/<name>/`（素材、骨骼 poser、动作库、台词、自己的状态），引擎不用动；见 `app/characters/README.md` | 要画新素材，程序只加包 |
 
 扩展点和限制：
 - 接口有版本号（`/v1`）和自描述的 `/v1/capabilities`（动作、表情、事件、规则运算符、信号、上限），产品可以先查再用。
 - 核心 `app/core/controller.js` 不依赖 HTTP，想嵌进别的 Node/Electron 进程可以直接调用它的方法、订阅事件。
 - 规则改完保存即生效，也能通过接口整体替换；`cooldown` 和边沿触发（`crosses_above` 等）避免同一个状态反复触发。
 - 现在只能有一个实例、只在本机监听；多台机器或多人共用需要在前面再加一层。
-- 台词的语气、她自己的碎碎念、动作库本身都在渲染进程里（`lines.js`、`actions.js`），产品改不了；产品能做的是用自己的话让她说。
+- 台词的语气、她自己的碎碎念、动作库本身都在角色包里（`app/characters/claude/lines.js`、`actions.js`），产品改不了；产品能做的是用自己的话让她说。
 
 ## 怎么和她玩
 
@@ -71,7 +71,7 @@ tools/deploy_windows.sh --shortcut
 
 ## 动作库：连贯的表演
 
-除了待机时的呼吸、眨眼、看鼠标，她还有 21 个带时间轴的连贯动作（`app/renderer/actions.js`）：每个动作把手臂姿势、
+除了待机时的呼吸、眨眼、看鼠标，她还有 21 个带时间轴的连贯动作（`app/characters/claude/actions.js`）：每个动作把手臂姿势、
 表情、头身动作（歪头、点头、后仰、跳、落地挤压）、眼神、台词和特效（💢 青筋、汗滴、?、!、音符、蒸汽、灯泡、阴影线、
 星星、花瓣）编排在一条时间轴上，骨骼负责平滑过渡。
 
@@ -156,7 +156,7 @@ tools/deploy_windows.sh --shortcut
 `rm_dangles`（去掉丝带和耳坠）、`seg_hair`（把头发涂成纯品红，比较后就得到头发遮罩）、`armf_wave` / `armf_chin`
 （在去掉手臂的图上重新画的手臂，比较后差异就只有手臂本身）。`tools/build_rig.py` 负责切层、补洞，并校验静止时
 叠回去和原画一致（静止时平均误差：站 1.6/255、走 1.5、坐 0.2、拎 1.5），`tools/export_assets.py` 生成
-`app/assets/rig_{stand,walk,sit,drag}.json`。
+`app/characters/claude/assets/rig_{stand,walk,sit,drag,work}.json`。
 
 ## 素材管线
 
@@ -174,7 +174,7 @@ art/source ──► tools/prompts.py ──► art/prompts/*.txt
                                      art/work/  抠图、表情补丁、手臂帧
                                          │ tools/export_assets.py
                                          ▼
-                                     app/assets/  缩放 + 头部归一化 + 锚点 + 头发飘动权重图 + manifest.json
+                                     app/characters/claude/assets/  缩放 + 头部归一化 + 锚点 + 头发飘动权重图 + manifest.json
 ```
 
 几个关键做法：
@@ -208,7 +208,7 @@ python3 tools/build_assets.py && python3 tools/export_assets.py
 ## 仓库里有什么、没有什么
 
 ```
-app/        可直接运行的应用（含 app/assets：已导出的精灵、骨骼、表情贴图，约 11 MB）
+app/        可直接运行的应用（含 app/characters/claude/assets：已导出的精灵、骨骼、表情贴图，约 11 MB）
 art/source  两张原画
 art/gen     让 GPT 生成的全部改图，每张配一个 .json 记录提示词和参考图（骨骼的真正素材源，约 170 MB）
 art/prompts 生成用的提示词（tools/prompts.py 生成）
@@ -226,18 +226,23 @@ npm run assets      # = build_assets.py && build_rig.py && export_assets.py
 
 ```
 app/                      Electron 应用（部署时整个目录被同步到 Windows）
-  main.js                 透明置顶窗口、托盘和菜单、app:// 协议、启动 API
+  main.js                 透明置顶窗口、托盘和菜单、app:// 协议、启动 API；按设置加载一个角色包
   core/controller.js      模块核心：输入 → 渲染指令，交互 → 输出事件（不依赖传输方式）
-  core/rules.js           信号规则引擎
   core/server.js          HTTP/SSE 适配层（127.0.0.1:27826）
   core/rules.js           信号规则引擎（条件、模板、台词列表、steps 表演）
   core/default-rules.json 默认规则（Claude 用量提醒）
-  renderer/pet.js         行为状态机、物理、表情调度、说话队列、输入处理
-  renderer/rig.js         分层骨骼：蒙皮网格、骨骼层级、弹簧物理、动画参数
-  renderer/actions.js     动作库：21 个带时间轴的连贯表演
-  renderer/gl.js          WebGL2 渲染（整图 shader 飘发 + 网格）+ Canvas2D 兜底
-  renderer/fx.js          粒子：花瓣、五瓣花、闪光、爱心、Zzz
-  renderer/lines.js       台词
+  engine/pet.js           与角色无关的部分：窗口几何、状态机、走/拎/摔/落地/表演、说话、口型、鼠标、渲染
+  engine/rig.js           分层骨骼：蒙皮网格、骨骼层级、弹簧物理、参数缓动（poser 来自角色包）
+  engine/gl.js            WebGL2 渲染（整图 shader 飘发 + 网格）+ Canvas2D 兜底
+  engine/fx.js            粒子：花瓣、五瓣花、闪光、爱心、Zzz
+  engine/anim.js          缓动等小工具
+  characters/claude/      Claude 的角色包（见 app/characters/README.md）
+    character.json        窗口比例、尺寸、菜单、动作/表情列表
+    behaviour.js          她自己的状态：看书、打盹、思考、挥手、欢呼、书桌工作，以及各种反应
+    posers.js             五种骨骼的 poser、头发/裙子/头的蒙皮方式
+    actions.js            动作库：21 个带时间轴的连贯表演
+    lines.js              台词
+    assets/               已导出的精灵、骨骼、表情贴图
 clients/python/           Python 客户端 + 命令行
 integrations/claude-code/ Claude Code hook 脚本
 examples/usage_demo.py    模拟用量曲线，演示规则触发

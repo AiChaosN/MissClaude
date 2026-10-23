@@ -1,0 +1,18 @@
+{
+  "name": "claude",
+  "title": "MissClaude",
+  "window": { "aspect": [1.8, 1.75], "footY": 0.16 },
+  "sizes": { "small": 150, "medium": 200, "large": 260 },
+  "menu": [
+    { "label": "打个招呼", "action": "wave" },
+    { "label": "坐下看书", "action": "sit" },
+    { "label": "睡一会儿", "action": "sleep" },
+    { "label": "说句话", "action": "chatter" }
+  ],
+  "actions": ["idle", "wave", "cheer", "think", "sit", "sleep", "wake", "walk", "chatter", "work", "work_end"],
+  "library": [
+    "angry", "awkward", "smirk", "shy", "sad", "idea", "cheer_on", "raise_hand", "stretch", "point", "giggle",
+    "wink", "dance", "proud", "startled", "bored", "confused", "sneeze", "look_around", "peek", "hum"
+  ],
+  "expressions": ["happy", "surprised", "pout", "angry", "smirk", "awkward", "teary", "wink", "blush"]
+}

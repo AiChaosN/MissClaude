@@ -1,30 +1,29 @@
-// Behaviour, physics and drawing for the pet.
+// Behaviour, physics and drawing for a desktop pet: the character-agnostic part.
+//
+// A character pack (app/characters/<name>/index.js) supplies the art, the rig posers,
+// the action library, the lines and a subclass of this Pet that adds the character's
+// own states (sitting with a book, working at a desk, wagging a tail ...). What lives
+// here is what every character needs: the window geometry, the state machine, idle
+// decisions, walking, being dragged and dropped, timed actions, faces (blinking,
+// lip-sync), speech bubbles, mouse input, the module commands and rendering.
 //
 // Coordinates: `foot` is the pet's ground point in screen DIP, laid out as the idle
-// sprite (its boots on the ground). The window is always placed so that point sits
+// sprite (its feet on the ground). The window is always placed so that point sits
 // at layout.footX/footY inside it. Sprites are drawn in their own pixel space and
 // scaled by `s` (css px per sprite px); dangling poses hang from the head point.
 //
 // Module boundary: everything coming in arrives through command(); everything the
 // outside world may care about leaves through emit() (see docs/API.md).
+//
+// Conventions a pack follows: sprites `idle` (the rest pose, defines the layout),
+// `walk` and `drag` (held by the head); rigs `stand` (idle acts and hops), `walk`,
+// `drag`; the state names idle / walk / drag / fall / land / act are the engine's,
+// `sleep` is what a sleeping pack state is called (clicks wake it).
 
-import { ACTIONS, ease, pickIdleAction } from './actions.js';
 import { affine } from './gl.js';
-import { pick, timeGreeting } from './lines.js';
+import { clamp, ease, rand } from './anim.js';
 
-const rand = (a, b) => a + Math.random() * (b - a);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const FACE_SET = {
-  idle: 'idle', wave_a: 'idle', wave_b: 'idle', think: 'idle', sit_read: 'sit', walk: 'walk', work: 'desk',
-};
-// standing poses that the layered rig draws, and which arm it shows for each
-const RIG_ARM = { idle: 'down', wave_a: 'wave', wave_b: 'wave', think: 'chin' };
-const EXPRESSIONS = ['happy', 'surprised', 'pout', 'angry', 'smirk', 'awkward', 'teary', 'wink', 'blush'];
-const WORK_STATES = ['work_in', 'work', 'work_out'];
-const BUSY = ['drag', 'fall', ...WORK_STATES]; // states that ignore idle decisions and most reactions
 const GRAVITY = 2600;     // DIP/s^2 at medium size
-const WALK_SPEED = 56;    // DIP/s at medium size
-const WALK_STRIDE = 0.14; // step length / her height (see poseWalk in rig.js)
 const BLINK = { half: 0.05, closed: 0.14, end: 0.19 };
 const SPEECH_QUEUE_MAX = 5;
 const XFADE = 0.1; // seconds to dissolve between two different sprites/rigs
@@ -32,7 +31,7 @@ const XFADE = 0.1; // seconds to dissolve between two different sprites/rigs
 // Mouth shape for a character: Latin vowels as written, consonants half open, CJK
 // a stable pseudo-random vowel per character (weighted toward open shapes),
 // punctuation and spaces closed.
-function vowelOf(ch) {
+export function vowelOf(ch) {
   if (!ch || /[\s\p{P}\p{S}]/u.test(ch)) return null;
   const c = ch.toLowerCase();
   if ('aiueo'.includes(c)) return c;
@@ -43,24 +42,23 @@ function vowelOf(ch) {
 }
 
 export class Pet {
-  constructor({ host, renderer, fx, bubble, sprites, faces, rigs, light, shadow, init }) {
+  constructor({ host, renderer, fx, bubble, sprites, faces, rigs, light, shadow, init, character }) {
+    this.ch = character;
     this.host = host;
     this.light = light || null; // the line of light texture (fx.js makeLightLine)
     this.shadow = shadow || null; // the contact shadow texture (fx.js makeShadow)
     this.slitView = null;
     this.curDraw = null; // what this frame draws (trackDraw), for render and cross-fades
     this.xfade = null;
-    this.hideTimer = null;
+    this.hideDone = null; // pet time at which a fading bubble is hidden
     this.rigs = rigs || {};
     this.rig = this.rigs.stand || null; // the standing rig: idle acts, hops
     this.walkPhase = 0;
     this.drift = { x: 0, y: 0, next: 0 }; // where idle eyes wander
     this.choreo = null; // the action being played (state 'act')
-    this.propsView = null; // the desk and stool while they move on their own (work_in/work_out)
-    this.workPhase = null;
-    this.workUntil = 0;
-    this.afterWork = null;
-    this.pageFlip = -1e9;
+    this.propsView = null; // a rig's props while they move on their own (setProps)
+    this.propsRig = null;
+    this.propsName = null;
     this.r = renderer;
     this.fx = fx;
     this.bubble = bubble;
@@ -92,13 +90,24 @@ export class Pet {
     this.lastGreeting = null;
     this.hopAt = -1e9;
     this.working = false;
-    this.lastWorkLine = -1e9;
     this.theta = 0;
     this.omega = 0;
     this.lastSent = null;
     this.reground();
-    this.setState('wave');
-    this.say(timeGreeting() || pick('hello'));
+    this.greet();
+  }
+
+  // the first thing the pet does when it appears
+  greet() {
+    this.say(this.timeGreeting() || this.pick('hello'));
+  }
+
+  pick(kind) {
+    return this.ch.lines.pick(kind);
+  }
+
+  timeGreeting() {
+    return this.ch.lines.timeGreeting ? this.ch.lines.timeGreeting() : null;
   }
 
   emit(type, data = {}) {
@@ -118,8 +127,8 @@ export class Pet {
       y: l.footY + (idle.head[1] - idle.foot[1]) * this.s,
     };
     this.hairTop = l.footY - idle.foot[1] * this.s;
-    const drag = this.sprites.drag;
-    // how far the dangling sprite's boots reach below the idle boots
+    const drag = this.sprites.drag || idle;
+    // how far the dangling sprite's feet reach below the idle feet
     this.dragDrop = ((drag.foot[1] - drag.head[1]) - (idle.foot[1] - idle.head[1])) * this.s;
   }
 
@@ -187,6 +196,11 @@ export class Pet {
     return this.t - this.since;
   }
 
+  // states that ignore idle decisions and most reactions
+  isBusy(state = this.state) {
+    return state === 'drag' || state === 'fall' || (this.ch.busyStates || []).includes(state);
+  }
+
   update(dt) {
     this.t += dt;
     this.view = this.baseView('idle');
@@ -218,7 +232,7 @@ export class Pet {
     this.curDraw = cur;
   }
 
-  // gaze toward the cursor when it is within `radius` (k px) of her head, else null
+  // gaze toward the cursor when it is within `radius` (k px) of the head, else null
   cursorGaze(radius) {
     if (!this.cursor) return null;
     const h = this.headScreen();
@@ -231,7 +245,6 @@ export class Pet {
   // where the irises point, -1..1 on each axis
   gazeTarget() {
     if (this.glance) return [this.glance.dir * 0.85, 0];
-    if (this.view.sprite === 'think') return [0.55, -0.85];
     if (this.cursor) {
       const h = this.headScreen();
       const dx = this.cursor.x - h.x;
@@ -250,9 +263,8 @@ export class Pet {
   computeModel() {
     const v = this.view;
     const sp = this.sprites[v.sprite];
-    this.activeRig = (RIG_ARM[v.sprite] && this.rigs.stand) || (v.sprite === 'walk' && this.rigs.walk)
-      || (v.sprite === 'sit_read' && this.rigs.sit) || (v.sprite === 'drag' && this.rigs.drag)
-      || (v.sprite === 'work' && this.rigs.work) || null;
+    const rigName = this.ch.rigFor[v.sprite];
+    this.activeRig = (rigName && this.rigs[rigName]) || null;
     this.rigOn = Boolean(this.activeRig);
     if (this.activeRig && this.activeRig !== this.propsRig) this.activeRig.showMode = 'all';
     const anchor = v.anchor === 'head' ? sp.head : sp.foot;
@@ -267,77 +279,29 @@ export class Pet {
     this.modelSprite = sp;
   }
 
-  // what the layered rig should be doing, from state, expression and idle acts
+  // what the layered rig should be doing: the character maps state, expression and
+  // action poses to its rig parameters (rigParams), the rig eases toward them
   updateRig(dt) {
     const w = this.windowPos();
     const screen = affine.mul(affine.translate(w.x, w.y), this.model);
-    const kind = this.activeRig.kind;
-    if (kind === 'work') {
-      const ph = this.workPhase ? this.workPhase.kind : 'write';
-      // eyes on the paper (down and to the right), up and away while thinking, and a
-      // glance at the cursor when it comes close
-      const [gazeX, gazeY] = (ph !== 'think' && this.cursorGaze(300)) || (ph === 'think' ? [0.45, -0.85] : [0.75, 0.55]);
-      this.activeRig.set({
-        armW: ph === 'think' ? 'think' : 'write', write: ph === 'write' ? 1 : 0, tap: ph === 'think' ? 1 : 0,
-        headTilt: ph === 'think' ? -5 : ph === 'happy' ? 5 : 0, headNod: ph === 'write' ? 2 : 0,
-        lean: ph === 'happy' ? -1 : 0, gazeX, gazeY,
-      });
-      this.activeRig.update(dt, screen);
-      return;
+    const rig = this.activeRig;
+    const p = this.rigParams(rig.kind, rig);
+    if (p) rig.set(p);
+    rig.update(dt, screen);
+  }
+
+  // Default mapping: the walk cycle and flailing are the engine's, an action pose sets
+  // any parameter the rig knows, the eyes follow the gaze. Characters override this.
+  rigParams(kind, rig) {
+    const p = {};
+    if (kind === 'walk') { p.phase = this.walkPhase; p.stride = 1; }
+    if (kind === 'drag') p.flail = this.state === 'fall' ? 1.3 : 1;
+    const P = this.state === 'act' && this.choreo ? this.choreo.pose : null;
+    if (P) {
+      for (const key of Object.keys(rig.target)) if (P[key] !== undefined) p[key] = P[key];
     }
-    if (kind !== 'stand') {
-      if (kind === 'walk') this.activeRig.set({ phase: this.walkPhase, stride: 1 });
-      if (kind === 'sit') {
-        // reading: the eyes run along the line in step with the head (poseSit), look up
-        // at a cursor that comes close
-        const line = (this.activeRig.time % 4.6) / 4.6;
-        const scan = line < 0.9 ? -0.6 + (1.2 * line) / 0.9 : 0.6 - (1.2 * (line - 0.9)) / 0.1;
-        const [gazeX, gazeY] = this.cursorGaze(420) || [scan, 0.55];
-        this.activeRig.set({ sleep: this.state === 'sleep' ? 1 : 0, gazeX, gazeY });
-      }
-      if (kind === 'drag') this.activeRig.set({ flail: this.state === 'fall' ? 1.3 : 1 });
-      this.activeRig.update(dt, screen);
-      return;
-    }
-    if (this.state === 'act' && this.choreo) {
-      const P = this.choreo.pose;
-      const p = {
-        arm: P.arm || 'down', armB: P.armB || 'book', wave: P.wave || 0, tap: P.tap || 0,
-        headTilt: P.headTilt || 0, headNod: P.headNod || 0, lean: P.lean || 0, bookLift: P.bookLift || 0,
-        armOut: P.armOut || 0, breath: P.breath ?? 1, armMotion: P.armMotion || 0, stretch: P.stretch || 0,
-        shake: P.shake || 0,
-      };
-      if (this.talk.open) p.headNod += 1.2;
-      [p.gazeX, p.gazeY] = P.gazeX !== undefined ? [P.gazeX, P.gazeY || 0] : this.gazeTarget();
-      this.rig.set(p);
-      this.rig.update(dt, screen);
-      return;
-    }
-    const arm = RIG_ARM[this.view.sprite];
-    const expr = this.expr && this.t < this.exprUntil ? this.expr : null;
-    const look = this.glance ? this.glance.dir : this.look;
-    const p = {
-      arm, armB: 'book', wave: arm === 'wave' ? 1 : 0, tap: arm === 'chin' ? 1 : 0,
-      headTilt: 2.5 * look, headNod: 0, lean: 0, bookLift: 0, armOut: 0, breath: 1,
-      armMotion: 0, stretch: 0, shake: 0,
-    };
-    if (arm === 'wave') p.headTilt = 5;
-    if (arm === 'chin') p.headTilt = -6;
-    if (expr === 'happy') {
-      p.headTilt = 6;
-      p.armOut = 4;
-    } else if (expr === 'pout') {
-      p.headTilt = -5;
-      p.lean = -1.5;
-    } else if (expr === 'surprised') {
-      p.headNod = -3;
-      p.lean = 1.5;
-      p.armOut = 6;
-    }
-    if (this.talk.open) p.headNod += 1.6;
-    [p.gazeX, p.gazeY] = this.gazeTarget();
-    this.rig.set(p);
-    this.rig.update(dt, screen);
+    [p.gazeX, p.gazeY] = P && P.gazeX !== undefined ? [P.gazeX, P.gazeY || 0] : this.gazeTarget();
+    return p;
   }
 
   baseView(sprite, breath = 1, period = 3.4) {
@@ -357,18 +321,18 @@ export class Pet {
     this.foot.y = this.groundY();
     const h = this.t - this.hopAt;
     if (h < 0.35) this.view.dy = -Math.sin((Math.PI * h) / 0.35) * 10 * this.k;
-    if (this.working && this.rigs.work) {
-      this.setState('work_in');
-      return;
-    }
+    if (this.interruptIdle()) return;
     if (this.t < this.nextDecision) return;
-    if (this.working) {
-      this.setState('sit', { dur: 600 });
-      return;
-    }
     this.decide();
   }
 
+  // a character's reason to leave idle before the next decision (e.g. work to do);
+  // returns true after changing state
+  interruptIdle() {
+    return false;
+  }
+
+  // what to do when nothing is going on; characters bring their own table
   decide() {
     this.nextDecision = this.t + rand(4, 10);
     const r = Math.random();
@@ -376,14 +340,8 @@ export class Pet {
       this.walkTo(this.randomTarget());
       return;
     }
-    if (r < 0.44) return this.setState('sit', {});
-    if (r < 0.5) {
-      this.setState('think', { dur: rand(2.5, 4) });
-      if (Math.random() < 0.5) this.say(pick('think'));
-      return;
-    }
     if (r < 0.8 && this.rig) {
-      this.playAction(pickIdleAction());
+      this.playAction(this.ch.pickIdleAction());
       return;
     }
     if (r < 0.88) {
@@ -393,46 +351,47 @@ export class Pet {
     this.chatter();
   }
 
-  // ---- actions: timed performances from actions.js ----
+  // ---- actions: timed performances from the pack's action library ----
 
   playAction(name, { then = null } = {}) {
-    if (!ACTIONS[name] || !this.rig || BUSY.includes(this.state)) return false;
+    if (!this.ch.actions[name] || !this.rig || this.isBusy()) return false;
     this.setState('act', { name, then });
     return true;
   }
 
   enter_act({ name, then }) {
-    this.choreo = { name, def: ACTIONS[name], t: 0, cue: 0, pose: {}, then };
+    this.choreo = { name, def: this.ch.actions[name], t: 0, cue: 0, pose: {}, then };
     this.expr = null;
     this.emit('action', { name });
   }
 
-  // what cues and poses get to work with: speech and effects placed around her
+  // what cues and poses get to work with: speech and effects placed around the pet
   actCtx() {
+    return { k: this.k, say: (kind) => this.say(this.pick(kind) || kind), fx: this.actFx() };
+  }
+
+  // effects placed around the head and feet (offsets in k px; characters may move them)
+  actFx() {
     const h = this.winHead;
     const f = this.winFoot;
     const k = this.k;
     const fx = this.fx;
     return {
-      k,
-      say: (kind) => this.say(pick(kind) || kind),
-      fx: {
-        vein: () => fx.vein(h.x + 42 * k, h.y - 46 * k, k),
-        sweat: () => fx.sweat(h.x + 48 * k, h.y - 12 * k, k),
-        mark: (text) => fx.mark(h.x + 40 * k, h.y - 78 * k, k, text),
-        notes: (n) => fx.notes(h.x + rand(-40, 40) * k, h.y - 70 * k, k, n),
-        steam: () => {
-          fx.steam(h.x - 46 * k, h.y - 50 * k, k, -1);
-          fx.steam(h.x + 46 * k, h.y - 50 * k, k, 1);
-        },
-        bulb: () => fx.bulb(h.x + 6 * k, h.y - 92 * k, k),
-        gloom: () => fx.gloom(h.x - 30 * k, h.y - 70 * k, k),
-        dust: () => fx.dust(f.x, f.y - 4 * k, k),
-        stars: (n) => fx.stars(h.x + 26 * k, h.y - 4 * k, k, n),
-        hearts: (n) => fx.hearts(h.x, h.y - 40 * k, k, n),
-        sparkles: (n) => fx.sparkles(h.x, h.y - 10 * k, k, n),
-        burst: (n) => fx.burst(h.x, h.y - 10 * k, k, n),
+      vein: () => fx.vein(h.x + 42 * k, h.y - 46 * k, k),
+      sweat: () => fx.sweat(h.x + 48 * k, h.y - 12 * k, k),
+      mark: (text) => fx.mark(h.x + 40 * k, h.y - 78 * k, k, text),
+      notes: (n) => fx.notes(h.x + rand(-40, 40) * k, h.y - 70 * k, k, n),
+      steam: () => {
+        fx.steam(h.x - 46 * k, h.y - 50 * k, k, -1);
+        fx.steam(h.x + 46 * k, h.y - 50 * k, k, 1);
       },
+      bulb: () => fx.bulb(h.x + 6 * k, h.y - 92 * k, k),
+      gloom: () => fx.gloom(h.x - 30 * k, h.y - 70 * k, k),
+      dust: () => fx.dust(f.x, f.y - 4 * k, k),
+      stars: (n) => fx.stars(h.x + 26 * k, h.y - 4 * k, k, n),
+      hearts: (n) => fx.hearts(h.x, h.y - 40 * k, k, n),
+      sparkles: (n) => fx.sparkles(h.x, h.y - 10 * k, k, n),
+      burst: (n) => fx.burst(h.x, h.y - 10 * k, k, n),
     };
   }
 
@@ -458,59 +417,19 @@ export class Pet {
     if (c.t >= c.def.dur) {
       const next = c.then || c.def.next;
       this.choreo = null;
-      if (next && ACTIONS[next]) this.setState('act', { name: next });
+      if (next && this.ch.actions[next]) this.setState('act', { name: next });
       else this.setState('idle');
     }
   }
 
-  // ---- work: a desk and a stool open out of a line of light, she sits down and writes ----
+  // ---- props: a rig's furniture shown on its own, between two edges of light ----
 
-  // seconds: how long to keep writing once seated (Claude Code keeps her there while
-  // `working` is set instead)
-  startWork(seconds = 0) {
-    if (!this.rigs.work || ['drag', 'fall'].includes(this.state)) return;
-    if (this.state === 'work') {
-      this.workUntil = Math.max(this.workUntil, this.t + seconds);
-      return;
-    }
-    this.workFor = Math.max(this.workFor || 0, seconds);
-    if (!WORK_STATES.includes(this.state)) this.setState('work_in');
-  }
-
-  endWork() {
-    this.workUntil = 0;
-    this.workFor = 0;
-    this.working = false;
-  }
-
-  // where things go during the routine, in window css px (computed once per routine)
-  workGeometry() {
-    const rig = this.rigs.work;
-    const sp = this.sprites.work;
-    const idle = this.sprites.idle;
-    const h = this.layout.petHeight;
-    const toX = (x) => this.winFoot.x + (x - sp.foot[0]) * this.s;
-    const toY = (y) => this.winFoot.y + (y - sp.foot[1]) * this.s;
-    const props = rig.layers.filter((l) => l.propView);
-    const desk = rig.layers.find((l) => l.name === 'desk_whole');
-    const x0 = Math.min(...props.map((l) => toX(l.x)));
-    const x1 = Math.max(...props.map((l) => toX(l.x + l.w)));
-    // the line of light appears in the middle of the desk and opens over all the furniture
-    const cx = toX(desk.x + desk.w / 2);
-    return {
-      h, cx, half: Math.max(cx - x0, x1 - cx) + 4,
-      top: Math.min(...props.map((l) => toY(l.y))) - 6, bottom: this.winFoot.y + 2,
-      // she steps aside to the left to make room, only as far as her window allows
-      // (sprite px 4 is where the trimmed idle sprite's hair begins; the margin leaves
-      // room for the hair tips swinging out when she lands)
-      standDx: -(this.winFoot.x + (4 - idle.foot[0]) * this.s) + 18 * this.k,
-    };
-  }
-
-  // the furniture on its own: drawn only between x0 and x1, faded by opacity
-  setProps(x0, x1, opacity) {
+  // the props of rig `name` (whose sprite has the same name) drawn alone, only between
+  // x0 and x1 (window css px), faded by opacity
+  setProps(name, x0, x1, opacity) {
     if (!this.propsView) {
-      this.propsRig = this.rigs.work;
+      this.propsName = name;
+      this.propsRig = this.rigs[name];
       this.propsRig.showMode = 'props';
       this.propsView = {};
     }
@@ -521,11 +440,12 @@ export class Pet {
     if (this.propsRig) this.propsRig.showMode = 'all';
     this.propsView = null;
     this.propsRig = null;
+    this.propsName = null;
   }
 
-  // the furniture is drawn with the work sprite's model, anchored like her when seated
+  // the props are drawn with their sprite's model, anchored like the pet when it is in the sprite's pose
   updateProps(dt) {
-    const sp = this.sprites.work;
+    const sp = this.sprites[this.propsName];
     let m = affine.translate(this.winFoot.x, this.winFoot.y);
     m = affine.mul(m, affine.scale(this.s, this.s));
     m = affine.mul(m, affine.translate(-sp.foot[0], -sp.foot[1]));
@@ -536,14 +456,14 @@ export class Pet {
 
   // The light line: grows from its middle (grow 0..1), then splits into two edges that
   // sweep apart (spread 0..1, opening) or together (closing). Returns the window
-  // between the edges, where the furniture is visible.
+  // between the edges, where the props are visible. g: {cx, half, top, bottom}.
   slit(g, grow, spread, alpha) {
     const half = g.half * spread;
     this.slitView = alpha > 0.01 && grow > 0.01 ? { x: g.cx, top: g.top, bottom: g.bottom, grow, half, alpha } : null;
     return [g.cx - half, g.cx + half];
   }
 
-  // the light edges, over the furniture but under her
+  // the light edges, over the props but under the pet
   drawSlit(sl) {
     const L = this.light;
     const height = (sl.bottom - sl.top) * sl.grow;
@@ -558,160 +478,7 @@ export class Pet {
     }
   }
 
-  enter_work_in() {
-    this.wg = this.workGeometry();
-    this.clearProps();
-    this.say(pick('workStart'));
-    this.dustAt = {};
-    this.emit('work', { phase: 'start' });
-  }
-
-  update_work_in() {
-    const t = this.age;
-    const g = this.wg;
-    this.foot.y = this.groundY();
-    // a line of light (0.5-0.85) opens (0.85-1.65) and the furniture fades in between
-    const grow = ramp01(t, 0.5, 0.85);
-    const spread = ease.out(clamp((t - 0.85) / 0.8, 0, 1));
-    const [x0, x1] = this.slit(g, grow, spread, grow * (1 - ramp01(t, 1.6, 1.95)));
-    if (t < 2.15) this.setProps(x0, x1, t < 0.85 ? 0 : 0.25 + 0.75 * spread);
-    if (t > 1.65 && !this.dustAt.shine) {
-      this.dustAt.shine = true;
-      this.fx.sparkles(g.cx, (g.top + g.bottom) / 2, this.k, 6, 60);
-    }
-    if (t < 0.45) { // hops aside to make room
-      this.view = {
-        ...this.baseView('idle'), dx: g.standDx * ease.out(t / 0.45), dy: hopY(t, 0, 0.45, 0.1 * g.h),
-      };
-    } else if (t < 1.9) { // watches it appear
-      const sq = 0.05 * Math.exp(-(t - 0.45) * 10) * Math.cos((t - 0.45) * 26);
-      this.view = { ...this.baseView('idle'), dx: g.standDx, sy: 1 - sq };
-      this.glance = { dir: 1, until: this.t + 0.2 };
-      if (!this.dustAt.aside) {
-        this.dustAt.aside = true;
-        this.fx.dust(this.winFoot.x + g.standDx, this.winFoot.y, this.k, 5);
-      }
-    } else if (t < 2.15) { // hops up onto the stool
-      if (!this.dustAt.hop) {
-        this.dustAt.hop = true;
-        this.say(pick('workPop'));
-      }
-      this.view = {
-        ...this.baseView('idle'), dx: g.standDx * (1 - (t - 1.9) / 0.5), dy: hopY(t, 1.9, 0.5, 0.2 * g.h),
-      };
-    } else { // seated (the switch is hidden at the top of the hop)
-      if (this.propsView) {
-        this.clearProps();
-        this.fx.sparkles(this.winHead.x, this.winHead.y + 20 * this.k, this.k, 4);
-      }
-      const x = Math.min(1, (t - 1.9) / 0.5);
-      const sq = t > 2.4 ? 0.06 * Math.exp(-(t - 2.4) * 9) * Math.cos((t - 2.4) * 24) : 0;
-      this.view = { ...this.baseView('work'), dx: g.standDx * (1 - x), dy: hopY(t, 1.9, 0.5, 0.2 * g.h), sy: 1 - sq };
-    }
-    if (t >= 2.75) {
-      this.slitView = null;
-      this.setState('work');
-    }
-  }
-
-  puffOnce(key, when, x, y) {
-    if (when && !this.dustAt[key]) {
-      this.dustAt[key] = true;
-      this.fx.dust(x, y - 4 * this.k, this.k, 8);
-    }
-  }
-
-  enter_work() {
-    this.workUntil = Math.max(this.workUntil, this.t + (this.workFor || 0));
-    this.workFor = 0;
-    this.workPhase = { kind: 'write', until: this.t + rand(4, 8) };
-    this.nextWorkLine = this.t + rand(8, 20);
-  }
-
-  update_work() {
-    this.foot.y = this.groundY();
-    this.view = this.baseView('work');
-    const ph = this.workPhase;
-    if (this.t > ph.until) {
-      const r = Math.random();
-      if (ph.kind === 'write' && r < 0.5) {
-        this.workPhase = { kind: 'think', until: this.t + rand(2.5, 4) };
-        if (Math.random() < 0.4) this.say(pick('workThink'));
-      } else if (ph.kind === 'write' && r < 0.7) {
-        this.workPhase = { kind: 'happy', until: this.t + 1.4 };
-        this.fx.sparkles(this.winHead.x, this.winHead.y, this.k, 3);
-        if (Math.random() < 0.5) this.say(pick('workHappy'));
-      } else {
-        this.workPhase = { kind: 'write', until: this.t + rand(5, 10) };
-      }
-    }
-    if (this.t > this.nextWorkLine) {
-      this.nextWorkLine = this.t + rand(15, 30);
-      if (this.workPhase.kind === 'write' && Math.random() < 0.4) this.say(pick('workWrite'));
-    }
-    if (!this.working && this.t > this.workUntil) this.setState('work_out');
-  }
-
-  enter_work_out() {
-    this.wg = this.workGeometry();
-    this.workPhase = { kind: 'happy', until: Infinity };
-    this.say(pick('workDone'));
-    this.fx.sparkles(this.winHead.x, this.winHead.y, this.k, 5);
-    this.dustAt = {};
-    this.emit('work', { phase: 'end' });
-  }
-
-  update_work_out() {
-    const t = this.age;
-    const g = this.wg;
-    this.foot.y = this.groundY();
-    if (t < 0.9) {
-      this.view = this.baseView('work');
-    } else if (t < 1.15) { // hops off the stool (top of the hop: swap to standing)
-      this.view = { ...this.baseView('work'), dx: g.standDx * (t - 0.9) / 0.5, dy: hopY(t, 0.9, 0.5, 0.2 * g.h) };
-    } else {
-      // the edges of light appear at both ends (1.5-1.7), sweep together (1.7-2.5) with
-      // the furniture fading out between them, and the line shrinks away (2.5-2.8)
-      const spread = 1 - ease.in(clamp((t - 1.7) / 0.8, 0, 1));
-      const grow = 1 - ramp01(t, 2.5, 2.8);
-      const [x0, x1] = this.slit(g, grow, spread, ramp01(t, 1.5, 1.7) * grow);
-      if (t < 2.5) {
-        this.setProps(x0, x1, 0.25 + 0.75 * spread);
-      } else if (this.propsView) {
-        this.clearProps();
-        this.fx.sparkles(g.cx, (g.top + g.bottom) / 2, this.k, 6, 30);
-      }
-      if (t < 1.4) {
-        this.view = { ...this.baseView('idle'), dx: g.standDx * Math.min(1, (t - 0.9) / 0.5), dy: hopY(t, 0.9, 0.5, 0.2 * g.h) };
-      } else if (t < 2.8) { // watches the furniture go
-        this.view = { ...this.baseView('idle'), dx: g.standDx };
-        this.glance = { dir: 1, until: this.t + 0.2 };
-        if (!this.dustAt.land) {
-          this.dustAt.land = true;
-          this.fx.dust(this.winFoot.x + g.standDx, this.winFoot.y, this.k, 6);
-          this.setExpression('happy', 1.5);
-        }
-      } else { // hops back to her spot, the way she hopped aside (the walking sprite's
-        // trailing hair would reach past the window's edge here)
-        const x = ease.out(Math.min(1, (t - 2.8) / 0.45));
-        const sq = t > 3.25 ? 0.05 * Math.exp(-(t - 3.25) * 10) * Math.cos((t - 3.25) * 26) : 0;
-        this.view = { ...this.baseView('idle'), dx: g.standDx * (1 - x), dy: hopY(t, 2.8, 0.45, 0.1 * g.h), sy: 1 - sq };
-        if (t > 3.25 && !this.dustAt.home) {
-          this.dustAt.home = true;
-          this.fx.dust(this.winFoot.x, this.winFoot.y, this.k, 5);
-        }
-      }
-    }
-    if (t >= 3.6) {
-      this.slitView = null;
-      this.clearProps();
-      const next = this.afterWork;
-      this.afterWork = null;
-      this.workPhase = null;
-      if (next && this.playAction(next)) return;
-      this.setState('idle');
-    }
-  }
+  // ---- walking ----
 
   randomTarget() {
     const [x0, x1] = this.xBounds();
@@ -730,8 +497,8 @@ export class Pet {
 
   chatter(force = false) {
     if (!force && this.t - this.lastChat < 40) return;
-    const greeting = timeGreeting();
-    let line = pick('chatter');
+    const greeting = this.timeGreeting();
+    let line = this.pick('chatter');
     if (greeting && greeting !== this.lastGreeting) {
       line = greeting;
       this.lastGreeting = greeting;
@@ -744,7 +511,7 @@ export class Pet {
   }
 
   update_walk(dt) {
-    const step = WALK_SPEED * this.k * dt;
+    const step = this.ch.walk.speed * this.k * dt;
     const [x0, x1] = this.xBounds();
     const target = clamp(this.st.target, x0, x1);
     this.foot.y = this.groundY();
@@ -756,7 +523,7 @@ export class Pet {
     }
     this.foot.x += this.dir * step;
     // one step (half a cycle) per stride length walked
-    this.walkPhase += (step / (WALK_STRIDE * this.layout.petHeight)) * Math.PI;
+    this.walkPhase += (step / (this.ch.walk.stride * this.layout.petHeight)) * Math.PI;
     const ph = this.age * Math.PI * 2.2;
     const rigged = Boolean(this.rigs.walk);
     Object.assign(this.view, {
@@ -767,112 +534,20 @@ export class Pet {
     });
   }
 
-  enter_sit({ dur }) {
-    this.sitUntil = this.t + (dur || rand(25, 70));
-    this.nextRead = this.t + rand(10, 20);
-    this.nextFlip = this.t + rand(4, 9);
-  }
-
-  update_sit() {
-    this.foot.y = this.groundY();
-    this.view = this.baseView('sit_read', 0.7);
-    if (this.t > this.nextFlip) { // turn a page now and then
-      this.pageFlip = this.t;
-      this.nextFlip = this.t + rand(9, 20);
-    }
-    const a = this.age;
-    if (a < 0.3) this.view.sy *= 1 - 0.06 * Math.cos((a / 0.3) * Math.PI * 0.5); // settle down
-    if (this.t > this.nextRead) {
-      this.nextRead = this.t + rand(15, 30);
-      if (this.working && this.t - this.lastWorkLine > 25) {
-        this.lastWorkLine = this.t;
-        this.say(pick('ccWork'));
-      } else if (!this.working && Math.random() < 0.3) {
-        this.say(pick('read'));
-      }
-    }
-    if (this.working || this.t < this.sitUntil) return;
-    if (Math.random() < 0.45) {
-      if (Math.random() < 0.5) this.say(pick('sleepy'));
-      this.setState('sleep');
-    } else {
-      this.standUp();
-    }
-  }
-
   standUp() {
     this.setState('land', { impact: 350 * this.k });
-  }
-
-  enter_sleep({ dur }) {
-    this.sleepUntil = this.t + (dur || rand(60, 180));
-    this.nextZ = this.t + 1.2;
-  }
-
-  update_sleep() {
-    this.foot.y = this.groundY();
-    this.view = this.baseView('sit_read', 1.3, 4.6);
-    this.view.rot = Math.sin(this.t * 0.8) * 0.012;
-    if (this.t > this.nextZ) {
-      this.nextZ = this.t + 1.5;
-      const h = this.winHead;
-      this.fx.zzz(h.x + 30 * this.k, h.y - 40 * this.k, this.k);
-    }
-    if (this.t > this.sleepUntil) this.wake();
   }
 
   wake() {
     this.standUp();
     this.setExpression('surprised', 1.2);
-    this.say(pick('wake'));
+    this.say(this.pick('wake'));
     this.emit('wake');
-  }
-
-  enter_think({ dur }) {
-    this.thinkUntil = this.t + (dur || 3);
-  }
-
-  update_think() {
-    this.foot.y = this.groundY();
-    this.view = this.baseView('think');
-    if (this.t > this.thinkUntil) this.setState('idle');
-  }
-
-  enter_wave({ dur }) {
-    this.waveFor = dur || 1.9;
-    this.setExpression('happy', this.waveFor);
-  }
-
-  update_wave() {
-    this.foot.y = this.groundY();
-    this.view = this.baseView(Math.floor(this.age / 0.2) % 2 ? 'wave_b' : 'wave_a');
-    if (this.age > this.waveFor) this.setState('idle');
-  }
-
-  enter_cheer() {
-    const h = this.winHead;
-    this.fx.sparkles(h.x, h.y, this.k, 6);
-  }
-
-  update_cheer() {
-    const D = 0.8;
-    const p = clamp(this.age / D, 0, 1);
-    this.foot.y = this.groundY();
-    this.view = this.baseView('cheer', 0);
-    this.view.dy = -Math.sin(Math.PI * p) * 0.24 * this.layout.petHeight;
-    if (p < 0.12 || p > 0.88) this.view.sy = 0.95;
-    if (this.age > D) this.setState('land', { impact: 600 * this.k });
   }
 
   // ---- dragging, falling, landing ----
 
   startDrag() {
-    if (WORK_STATES.includes(this.state)) { // picked up mid-work: the furniture vanishes
-      this.slitView = null;
-      if (this.propsView || this.state === 'work') this.fx.sparkles(this.winFoot.x, this.winFoot.y - 60 * this.k, this.k, 8);
-      this.clearProps();
-      this.workPhase = null;
-    }
     this.choreo = null;
     this.grab = { x: this.foot.x - this.cursor.x, y: this.foot.y - this.cursor.y };
     this.dragV = { x: 0, y: 0 };
@@ -882,7 +557,7 @@ export class Pet {
     this.expr = null;
     this.setState('drag');
     this.emit('drag_start', { x: this.foot.x, y: this.foot.y });
-    if (Math.random() < 0.4) this.say(pick('drag'));
+    if (Math.random() < 0.4) this.say(this.pick('drag'));
   }
 
   update_drag(dt) {
@@ -942,10 +617,11 @@ export class Pet {
     if (impact > 900 * this.k) {
       this.setExpression('surprised', 0.9);
       this.fx.burst(this.winFoot.x, this.winFoot.y - 6, this.k, 6);
-      if (Math.random() < 0.5) this.say(pick('land'));
+      if (Math.random() < 0.5) this.say(this.pick('land'));
     }
-    // thrown hard: after landing she is not amused
-    this.afterLand = impact > 1700 * this.k ? (Math.random() < 0.5 ? 'awkward' : 'angry') : null;
+    // thrown hard: after landing the pet is not amused
+    const thrown = this.ch.reactions.thrown || [];
+    this.afterLand = impact > 1700 * this.k && thrown.length ? thrown[Math.floor(Math.random() * thrown.length)] : null;
   }
 
   update_land() {
@@ -971,7 +647,7 @@ export class Pet {
       this.expr = null;
       return;
     }
-    if (!EXPRESSIONS.includes(name)) return;
+    if (!this.ch.expressions.includes(name)) return;
     this.expr = name;
     this.exprUntil = this.t + seconds;
   }
@@ -1025,30 +701,34 @@ export class Pet {
     return p < BLINK.half || p >= BLINK.closed ? 'half' : 'blink';
   }
 
+  // the face patches drawn over the current sprite
   faceList() {
-    const set = FACE_SET[this.view.sprite];
+    const set = this.ch.faceSets[this.view.sprite];
     const F = set && this.faces[set];
     if (!F) return [];
-    if (set === 'walk') return this.blinkStage() && F.blink ? [F.blink] : [];
-    if (set === 'desk') {
-      const ph = this.workPhase ? this.workPhase.kind : 'write';
-      if ((ph === 'think' || ph === 'happy') && F[ph]) return [F[ph]];
-      return this.blinkStage() === 'blink' && F.blink ? [F.blink] : [];
-    }
-    if (set === 'sit') {
-      if (this.state === 'sleep') return F.sleep ? [F.sleep] : [];
-      const out = this.blinkStage() === 'blink' && F.blink ? [F.blink] : [];
-      const flip = this.t - this.pageFlip;
-      if (flip < 0.3 && F.page1) out.push(F.page1);
-      else if (flip < 0.65 && F.page2) out.push(F.page2);
-      return out;
-    }
+    const special = this.specialFaces(set, F);
+    if (special) return special;
     if (this.state === 'act' && this.choreo) return this.actFaces(F);
+    return this.standardFaces(F);
+  }
+
+  // a character's own rules for some face sets (reading, sleeping ...); null means
+  // the standard expression / eyes / mouth logic applies
+  specialFaces() {
+    return null;
+  }
+
+  // the eyes look up (baked look_up patch) in some pose of the character's
+  eyesUp() {
+    return false;
+  }
+
+  standardFaces(F) {
     const ex = this.expr && this.t < this.exprUntil ? this.expr : null;
     if (ex && ex !== 'wink' && ex !== 'blush' && F[ex]) return [F[ex]];
     const out = [];
     const look = this.glance ? this.glance.dir : this.look;
-    const eyesUp = this.view.sprite === 'think';
+    const eyesUp = this.eyesUp();
     // with moving irises (layered rig on WebGL) the baked look-* patches are not needed
     const irisGaze = this.rigOn && this.activeRig.hasIrises && this.r.kind === 'webgl';
     const eyes = (ex === 'wink' && 'wink') || this.blinkStage() || (irisGaze ? null : eyesUp ? 'look_up'
@@ -1081,9 +761,9 @@ export class Pet {
 
   // ---------------- speech ----------------
   //
-  // source: 'self' (her own chatter and reactions), 'menu', 'api', 'rule', 'claude_code'.
-  // Quiet mode mutes 'self' only. Anything that is not 'self' queues behind other
-  // external speech instead of cutting it off, unless priority is 'high'.
+  // source: 'self' (the pet's own chatter and reactions), 'menu', 'api', 'rule',
+  // 'claude_code'. Quiet mode mutes 'self' only. Anything that is not 'self' queues
+  // behind other external speech instead of cutting it off, unless priority is 'high'.
 
   say(text, { source = 'self', priority = 'normal', duration = null } = {}) {
     text = String(text || '').trim();
@@ -1104,7 +784,7 @@ export class Pet {
     this.lastChat = this.t;
     const chars = Array.from(text);
     this.speech = { text, source, chars, shown: 0, next: this.t, hideAt: Infinity, duration };
-    clearTimeout(this.hideTimer);
+    this.hideDone = null;
     this.bubble.text.textContent = '';
     this.bubble.el.hidden = false;
     this.bubble.el.classList.remove('pop', 'out');
@@ -1115,6 +795,11 @@ export class Pet {
   }
 
   updateBubble() {
+    if (this.hideDone && this.t >= this.hideDone) {
+      this.hideDone = null;
+      this.bubble.el.hidden = true;
+      this.bubble.el.classList.remove('out');
+    }
     const sp = this.speech;
     if (!sp) return;
     let changed = false;
@@ -1129,15 +814,14 @@ export class Pet {
     }
     if (this.t > sp.hideAt) {
       this.speech = null;
-      const el = this.bubble.el;
-      el.classList.add('out');
-      this.hideTimer = setTimeout(() => { el.hidden = true; el.classList.remove('out'); }, 180);
+      this.bubble.el.classList.add('out');
+      this.hideDone = this.t + 0.18; // the fade-out animation's length
       this.emit('speech_end', { text: sp.text, interrupted: false });
       const next = this.speechQueue.shift();
       if (next) this.showSpeech(next);
       return;
     }
-    // over her head, wherever it is right now (stepping aside, hopping, hanging)
+    // over the head, wherever it is right now (stepping aside, hopping, hanging)
     const el = this.bubble.el;
     const bw = el.offsetWidth;
     const bh = el.offsetHeight;
@@ -1179,7 +863,7 @@ export class Pet {
       if (this.t - p.last > 0.6) p.acc = 0;
       p.acc += Math.abs(e.clientX - p.prevX);
       p.last = this.t;
-      if (p.acc > 260 * this.k && this.t > p.cooldown && ['idle', 'sit', 'think', 'work'].includes(this.state)) {
+      if (p.acc > 260 * this.k && this.t > p.cooldown && this.ch.pettable.includes(this.state)) {
         p.acc = 0;
         p.cooldown = this.t + 3;
         this.onPetted();
@@ -1201,7 +885,7 @@ export class Pet {
     this.cursor = { x: e.screenX, y: e.screenY };
     if (!this.press.dragging && Math.hypot(e.screenX - this.press.x, e.screenY - this.press.y) > 5) {
       this.press.dragging = true;
-      if (this.state === 'sleep') this.say(pick('wake'));
+      if (this.state === 'sleep') this.say(this.pick('wake'));
       this.startDrag();
     }
   }
@@ -1223,7 +907,7 @@ export class Pet {
       this.wake();
       return;
     }
-    if (now < this.poutUntil) { // poking a sulking pet just keeps her sulking
+    if (now < this.poutUntil) { // poking a sulking pet just keeps it sulking
       this.cancelClick();
       this.setExpression('pout', 2.6);
       this.poutUntil = now + 2.6;
@@ -1239,10 +923,7 @@ export class Pet {
     if (this.clickTimer) {
       this.cancelClick();
       this.emit('double_click', { state: this.state });
-      if (WORK_STATES.includes(this.state)) return;
-      if (Math.random() < 0.5 && this.playAction('raise_hand')) return;
-      this.setState('wave');
-      this.say(pick('hello'));
+      this.onDoubleClick();
       return;
     }
     this.clickTimer = setTimeout(() => {
@@ -1257,74 +938,53 @@ export class Pet {
     this.clickTimer = null;
   }
 
+  onDoubleClick() {
+    if (this.isBusy()) return;
+    if (Math.random() < 0.5 && this.playAction(this.ch.reactions.doubleClick)) return;
+    this.say(this.pick('hello'));
+  }
+
   reactClick() {
-    if (['drag', 'fall', 'cheer', 'work_in', 'work_out'].includes(this.state)) return;
+    if (this.isBusy() || this.state === 'act') return; // let the pet finish what it is doing
     const h = this.winHead;
-    if (this.state === 'work') {
-      this.workPhase = { kind: 'happy', until: this.t + 1.4 };
-      this.fx.hearts(h.x, h.y - 30 * this.k, this.k, 2);
-      this.say(pick('workClick'));
-      return;
-    }
-    if (this.state === 'act') return; // let her finish what she is doing
-    if (this.state !== 'sit' && Math.random() < 0.4 && this.rig) {
-      const pool = ['giggle', 'wink', 'confused', 'startled', 'smirk', 'point', 'proud'];
+    const pool = this.ch.reactions.click || [];
+    if (pool.length && Math.random() < 0.4 && this.rig) {
       if (this.playAction(pool[Math.floor(Math.random() * pool.length)])) return;
-    }
-    if (this.state === 'sit') {
-      this.fx.hearts(h.x, h.y - 30 * this.k, this.k, 2);
-      this.say(this.working ? pick('ccWork') : pick('read'));
-      return;
-    }
-    if (Math.random() < 0.2) {
-      this.setState('cheer');
-      this.say(pick('click'));
-      return;
     }
     if (this.state !== 'idle') this.setState('idle');
     this.setExpression('happy', 1.6);
     this.hopAt = this.t;
     if (this.rig) this.rig.kick(1.6);
     this.fx.burst(h.x, h.y - 20 * this.k, this.k, 8);
-    this.say(pick('click'));
+    this.say(this.pick('click'));
   }
 
   pout() {
     this.poutUntil = this.t + 4.2;
-    if (this.playAction('angry')) return;
+    if (this.playAction(this.ch.reactions.poke)) return;
     if (this.state !== 'idle') this.setState('idle');
     this.setExpression('pout', 2.6);
-    this.say(pick('poke'));
+    this.say(this.pick('poke'));
   }
 
   onPetted() {
     const h = this.winHead;
     if (this.rig) this.rig.kick(0.6);
     this.emit('pet', { state: this.state });
-    if (this.state === 'idle' && Math.random() < 0.45 && this.playAction('shy')) return;
+    if (this.state === 'idle' && Math.random() < 0.45 && this.playAction(this.ch.reactions.petted)) return;
     this.fx.hearts(h.x, h.y - 40 * this.k, this.k, 3);
-    if (this.state !== 'sit') {
-      if (this.state !== 'idle') this.setState('idle');
-      this.setExpression('happy', 2);
-    }
-    this.say(pick('pet'));
+    if (this.state !== 'idle') this.setState('idle');
+    this.setExpression('happy', 2);
+    this.say(this.pick('pet'));
   }
 
   // ---------------- inputs ----------------
 
+  // the engine's own actions; a character handles its own first and falls back here
   act(action, opts = {}) {
     if (['drag', 'fall'].includes(this.state)) return;
-    if (WORK_STATES.includes(this.state) && !['work', 'work_end', 'chatter'].includes(action)) {
-      if (action === 'idle') this.endWork();
-      return;
-    }
     switch (action) {
       case 'idle': this.setState('idle'); break;
-      case 'wave': this.setState('wave', { dur: opts.duration }); break;
-      case 'cheer': this.setState('cheer'); break;
-      case 'think': this.setState('think', { dur: opts.duration || 3 }); break;
-      case 'sit': this.setState('sit', { dur: opts.duration || rand(40, 90) }); break;
-      case 'sleep': this.setState('sleep', { dur: opts.duration }); break;
       case 'wake': if (this.state === 'sleep') this.wake(); break;
       case 'walk':
         if (Number.isFinite(opts.x)) this.walkTo(opts.x);
@@ -1332,12 +992,9 @@ export class Pet {
         else this.walkTo(this.randomTarget());
         break;
       case 'chatter': this.chatter(true); break;
-      case 'work': this.startWork(opts.duration || 60); break;
-      case 'work_end': this.endWork(); break;
       default:
-        if (ACTIONS[action]) {
-          if (WORK_STATES.includes(this.state) || this.state === 'act') this.choreo = null;
-          if (this.state === 'work') return; // seated: finish working first
+        if (this.ch.actions[action]) {
+          if (this.state === 'act') this.choreo = null;
           this.setState('act', { name: action });
         }
         break;
@@ -1361,44 +1018,26 @@ export class Pet {
     }
   }
 
-  // Claude Code hook events (see integrations/claude-code)
+  // Claude Code hook events (see integrations/claude-code); characters refine this
   onClaudeCode(event, text) {
     if (['drag', 'fall'].includes(this.state)) return;
     const say = (line, priority = 'normal') => this.say(line, { source: 'claude_code', priority });
     switch (event) {
-      case 'SessionStart':
-        this.setState('wave');
-        say(pick('ccStart'));
-        break;
-      case 'UserPromptSubmit':
-        this.working = true;
-        say(pick('ccPrompt'));
-        if (this.rigs.work) this.startWork(0);
-        else this.setState('think', { dur: 2.5 });
-        break;
+      case 'SessionStart': say(this.pick('ccStart')); break;
+      case 'UserPromptSubmit': this.working = true; say(this.pick('ccPrompt')); break;
       case 'PreToolUse':
-      case 'PostToolUse':
-        this.working = true;
-        if (this.rigs.work) this.startWork(0);
-        else if (!['sit', 'think', 'wave'].includes(this.state)) this.setState('sit', { dur: 600 });
-        break;
+      case 'PostToolUse': this.working = true; break;
       case 'Notification':
-        say(text && Array.from(text).length <= 24 ? text : pick('ccAttention'), 'high');
-        if (this.state === 'work') this.workPhase = { kind: 'happy', until: this.t + 2 };
-        else if (!this.playAction('raise_hand')) this.setState('wave');
+        say(text && Array.from(text).length <= 24 ? text : this.pick('ccAttention'), 'high');
+        this.playAction(this.ch.reactions.attention);
         break;
       case 'Stop':
         this.working = false;
-        this.workUntil = 0;
-        say(pick('ccDone'), 'high');
-        if (WORK_STATES.includes(this.state)) this.afterWork = 'cheer_on';
-        else if (!this.playAction('cheer_on')) this.setState('cheer');
+        say(this.pick('ccDone'), 'high');
+        this.playAction(this.ch.reactions.done);
         break;
-      case 'SubagentStop':
-        this.fx.sparkles(this.winHead.x, this.winHead.y, this.k, 3);
-        break;
-      default:
-        break;
+      case 'SubagentStop': this.fx.sparkles(this.winHead.x, this.winHead.y, this.k, 3); break;
+      default: break;
     }
   }
 
@@ -1429,12 +1068,8 @@ export class Pet {
     const h = this.layout.petHeight;
     const v = this.view;
     if (['drag', 'fall'].includes(this.state)) return null;
-    const sprite = v.sprite;
-    let w = 0.5 * h;
+    let w = (this.ch.shadowWidth[v.sprite] ?? 0.5) * h;
     let o = 1;
-    if (sprite === 'sit_read') w = 0.78 * h;
-    else if (sprite === 'work') w = 1.1 * h;
-    else if (sprite === 'walk') w = 0.55 * h;
     const lift = clamp(-(v.dy || 0) / (0.25 * h), 0, 1); // hops: the shadow shrinks and fades
     w *= 1 - 0.35 * lift;
     o *= 1 - 0.55 * lift;
@@ -1449,13 +1084,13 @@ export class Pet {
     this.r.draw(S.tex, m, { rect: [0, 0, S.w, S.h], spriteW: S.w, spriteH: S.h, opacity: sh.opacity });
   }
 
-  // one drawing of her: a rig or a whole sprite with its face patches
+  // one drawing of the pet: a rig or a whole sprite with its face patches
   drawCharacter(d, opacity = 1, ox = 0, oy = 0) {
     const m = ox || oy ? affine.mul(affine.translate(ox, oy), d.model) : d.model;
     if (d.rigOn) {
       const rig = d.rig;
       const mode = rig.showMode;
-      if (opacity < 1) rig.showMode = 'char'; // a fading copy never brings the furniture along
+      if (opacity < 1) rig.showMode = 'char'; // a fading copy never brings the props along
       rig.draw(this.r, m, d.faces, opacity);
       rig.showMode = mode;
       return;
@@ -1471,23 +1106,29 @@ export class Pet {
     }
   }
 
+  // props moving on their own, and the light edges they appear between
+  drawProps() {
+    if (this.propsView && this.propsView.model && this.propsView.opacity > 0.001) {
+      const o = this.propsView.opacity;
+      const H = this.layout.petHeight;
+      this.r.clipX(this.propsView.x0, this.propsView.x1);
+      this.drawShadowAt({ x: this.winFoot.x, y: this.winFoot.y + 0.01 * H,
+        w: (this.ch.shadowWidth[this.propsName] ?? 0.5) * H, h: 0.12 * H, opacity: o });
+      this.propsRig.draw(this.r, this.propsView.model, [], o);
+      this.r.clipX();
+    }
+    if (this.slitView && this.light && this.light.tex) this.drawSlit(this.slitView);
+  }
+
   render() {
     const cur = this.curDraw;
     if (!cur) return;
     this.r.clear();
     this.drawShadowAt(this.shadowParams());
-    if (this.propsView && this.propsView.model && this.propsView.opacity > 0.001) {
-      const o = this.propsView.opacity;
-      this.r.clipX(this.propsView.x0, this.propsView.x1);
-      this.drawShadowAt({ x: this.winFoot.x, y: this.winFoot.y + 0.01 * this.layout.petHeight,
-        w: 1.1 * this.layout.petHeight, h: 0.12 * this.layout.petHeight, opacity: o });
-      this.propsRig.draw(this.r, this.propsView.model, [], o);
-      this.r.clipX();
-    }
-    if (this.slitView && this.light && this.light.tex) this.drawSlit(this.slitView);
+    this.drawProps();
     this.drawCharacter(cur);
     if (this.xfade) {
-      // the window moved with her feet since then: keep the old drawing where it was
+      // the window moved with the feet since then: keep the old drawing where it was
       const x = this.xfade;
       const p = clamp((this.t - x.t0) / XFADE, 0, 1);
       this.drawCharacter(x, 1 - ease.smooth(p), x.foot.x - this.foot.x, x.foot.y - this.foot.y);
@@ -1495,10 +1136,3 @@ export class Pet {
     this.fx.draw();
   }
 }
-
-const ramp01 = (t, a, b) => ease.smooth(clamp((t - a) / (b - a), 0, 1));
-// height offset of a hop starting at t0 (css px, negative = up)
-const hopY = (t, t0, dur, h) => {
-  const x = (t - t0) / dur;
-  return x < 0 || x > 1 ? 0 : -4 * h * x * (1 - x);
-};

@@ -11,9 +11,9 @@ const { pathToFileURL } = require('node:url');
 const { PetController } = require('./core/controller');
 const { createApiServer } = require('./core/server');
 
-const SIZES = { small: 150, medium: 200, large: 260 }; // idle sprite height in DIP
+const CHARACTERS = path.join(__dirname, 'characters'); // one pack per folder, see characters/README.md
 const DEFAULTS = {
-  size: 'medium', quiet: false, wander: true, onTop: true, foot: null,
+  character: 'claude', size: 'medium', quiet: false, wander: true, onTop: true, foot: null,
   // outside Windows' dynamic range and WSL's mirrored-networking ephemeral range
   // (44620-48715 here), both of which refuse a bind from a Windows process
   apiPort: 27826, webhooks: [],
@@ -30,6 +30,8 @@ if (!isPrimary) app.exit(0);
 let win = null;
 let tray = null;
 let settings = { ...DEFAULTS };
+let character = null; // the active pack's character.json
+let controller = null;
 let foot = null; // pet's ground point in screen DIP, as last reported by the renderer
 let saveTimer = null;
 let rulesError = null;
@@ -47,7 +49,26 @@ process.on('uncaughtException', (err) => logError('uncaught:', err));
 const send = (cmd) => {
   if (win && !win.isDestroyed()) win.webContents.send('pet:command', cmd);
 };
-const controller = new PetController({ send });
+
+// ---------- character packs ----------
+
+function characterNames() {
+  try {
+    return fs.readdirSync(CHARACTERS).filter((n) => fs.existsSync(path.join(CHARACTERS, n, 'character.json'))).sort();
+  } catch {
+    return [];
+  }
+}
+
+function loadCharacter() {
+  if (!characterNames().includes(settings.character)) {
+    logError(`character "${settings.character}" not found; using ${DEFAULTS.character}`);
+    settings.character = DEFAULTS.character;
+  }
+  character = JSON.parse(fs.readFileSync(path.join(CHARACTERS, settings.character, 'character.json'), 'utf8'));
+}
+
+const characterAsset = (name) => path.join(CHARACTERS, settings.character, 'assets', name);
 
 // ---------- settings & rules files ----------
 
@@ -104,14 +125,16 @@ function saveRules(rules) {
 // ---------- geometry ----------
 
 function petHeight() {
-  return SIZES[settings.size] || SIZES.medium;
+  return character.sizes[settings.size] || character.sizes.medium;
 }
 
+// the window is shaped by the pack: wide enough for its poses, feet a little above the bottom
 function layout() {
   const h = petHeight();
-  const width = Math.round(h * 1.8);
-  const height = Math.round(h * 1.75);
-  return { petHeight: h, width, height, footX: width / 2, footY: height - Math.round(h * 0.16) };
+  const { aspect = [1.8, 1.75], footY = 0.16 } = character.window || {};
+  const width = Math.round(h * aspect[0]);
+  const height = Math.round(h * aspect[1]);
+  return { petHeight: h, width, height, footX: width / 2, footY: height - Math.round(h * footY) };
 }
 
 function displays() {
@@ -167,7 +190,7 @@ function createWindow() {
   // transparent pixels pass clicks through; the renderer turns this off while
   // the cursor is over the pet itself
   win.setIgnoreMouseEvents(true, { forward: true });
-  win.loadURL('app://pet/index.html');
+  win.loadURL(`app://pet/index.html?character=${encodeURIComponent(settings.character)}`);
   win.once('ready-to-show', () => win.showInactive());
   win.on('closed', () => { win = null; });
   // renderer warnings/errors and crashes end up in main.log too
@@ -209,12 +232,14 @@ function menuTemplate() {
   });
   const sizeItem = (label, size) => item(label, `size:${size}`, () => setSize(size),
     { type: 'radio', checked: settings.size === size });
+  const names = characterNames();
+  const characterItem = (name) => item(name, `character:${name}`, () => setCharacter(name),
+    { type: 'radio', checked: settings.character === name });
   return [
-    item('打个招呼', 'wave', () => send({ type: 'act', action: 'wave' })),
-    item('坐下看书', 'sit', () => send({ type: 'act', action: 'sit' })),
-    item('睡一会儿', 'sleep', () => send({ type: 'act', action: 'sleep' })),
-    item('说句话', 'chatter', () => send({ type: 'act', action: 'chatter' })),
+    // the pack's own menu: its actions by their names
+    ...(character.menu || []).map((m) => item(m.label, m.action, () => send({ type: 'act', action: m.action }))),
     { type: 'separator' },
+    ...(names.length > 1 ? [{ label: '角色', submenu: names.map(characterItem) }] : []),
     item('到处走走', 'wander', (m) => updateSetting('wander', m.checked), { type: 'checkbox', checked: settings.wander }),
     item('安静模式', 'quiet', (m) => updateSetting('quiet', m.checked), { type: 'checkbox', checked: settings.quiet }),
     { label: '大小', submenu: [sizeItem('小', 'small'), sizeItem('中', 'medium'), sizeItem('大', 'large')] },
@@ -235,15 +260,32 @@ function restart() {
   app.exit(0);
 }
 
+// another pack: everything (window, art, API capabilities) is built for one, so relaunch
+function setCharacter(name) {
+  if (name === settings.character) return;
+  settings.character = name;
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  try {
+    fs.mkdirSync(app.getPath('userData'), { recursive: true });
+    const changed = Object.fromEntries(Object.entries(settings)
+      .filter(([k, v]) => k !== 'foot' && JSON.stringify(v) !== JSON.stringify(DEFAULTS[k])));
+    fs.writeFileSync(userFile('settings.json'), JSON.stringify({ ...changed, foot }, null, 2));
+  } catch (err) {
+    logError('saving settings failed:', err);
+  }
+  restart();
+}
+
 function refreshMenus() {
   if (tray) tray.setContextMenu(Menu.buildFromTemplate(menuTemplate()));
 }
 
 function createTray() {
-  const img = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
-  img.addRepresentation({ scaleFactor: 2, buffer: fs.readFileSync(path.join(__dirname, 'assets', 'tray@2x.png')) });
+  const img = nativeImage.createFromPath(characterAsset('tray.png'));
+  img.addRepresentation({ scaleFactor: 2, buffer: fs.readFileSync(characterAsset('tray@2x.png')) });
   tray = new Tray(img);
-  tray.setToolTip('MissClaude');
+  tray.setToolTip(character.title || 'MissClaude');
   tray.on('click', () => {
     if (!win) return;
     if (win.isVisible()) win.hide();
@@ -294,6 +336,8 @@ app.on('window-all-closed', () => app.quit());
 app.whenReady().then(() => {
   if (!isPrimary) return;
   loadSettings();
+  loadCharacter();
+  controller = new PetController({ send, character });
   loadRules();
   watchRules();
   const root = path.resolve(__dirname);
@@ -308,6 +352,7 @@ app.whenReady().then(() => {
     port: settings.apiPort,
     extraState: () => ({
       visible: Boolean(win && win.isVisible()),
+      character: settings.character,
       foot,
       size: settings.size,
       quiet: settings.quiet,

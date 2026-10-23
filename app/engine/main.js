@@ -1,38 +1,49 @@
-// Renderer entry: load the sprite set, build the pet, wire input and run the loop.
+// Renderer entry: load the character pack and its art, build the pet, wire input and
+// run the loop. The pack is chosen by ?character=<name> (the main process sets it;
+// previews default to claude).
 
 import { Effects, makeLightLine, makeShadow } from './fx.js';
 import { Renderer, Renderer2D, alphaMask, loadImage } from './gl.js';
 import { createHost } from './host.js';
-import { Pet } from './pet.js';
 import { Rig } from './rig.js';
 
 const FRAME = 1 / 60;
 const RESTORE_GRACE_MS = 1500;
 
+async function loadCharacter(name) {
+  const dir = `characters/${name}`;
+  const info = await (await fetch(`${dir}/character.json`)).json();
+  const mod = (await import(`../${dir}/index.js`)).default;
+  return { ...info, ...mod, dir };
+}
+
 // Images stay referenced so textures can be rebuilt for another renderer.
-async function loadAssets() {
-  const manifest = await (await fetch('assets/manifest.json')).json();
+async function loadAssets(ch) {
+  const base = `${ch.dir}/assets`;
+  const manifest = await (await fetch(`${base}/manifest.json`)).json();
   const swayImg = {};
   const sprites = {};
   await Promise.all(Object.entries(manifest.sprites).map(async ([name, m]) => {
-    swayImg[m.sway] ??= loadImage(`assets/${m.sway}`);
-    const img = await loadImage(`assets/${m.file}`);
+    swayImg[m.sway] ??= loadImage(`${base}/${m.sway}`);
+    const img = await loadImage(`${base}/${m.file}`);
     sprites[name] = { ...m, img, swayImg: await swayImg[m.sway], mask: alphaMask(img) };
   }));
   const faces = {};
+  const faceGroups = ch.faceGroups || {};
   for (const [set, patches] of Object.entries(manifest.faces)) {
     faces[set] = {};
     await Promise.all(Object.entries(patches).map(async ([name, p]) => {
-      const img = await loadImage(`assets/${p.file}`);
-      faces[set][name] = { ...p, img, w: img.width, h: img.height, bone: p.group === 'book' ? 'chest' : 'head' };
+      const img = await loadImage(`${base}/${p.file}`);
+      const bone = p.bone || faceGroups[p.group] || ch.headBone || 'head';
+      faces[set][name] = { ...p, img, w: img.width, h: img.height, bone };
     }));
   }
   const rigs = {};
   for (const [name, file] of Object.entries(manifest.rigs || {})) {
-    const def = await (await fetch(`assets/${file}`)).json();
+    const def = await (await fetch(`${base}/${file}`)).json();
     const images = {};
     const files = [...def.layers.map((l) => [l.name, l.file]), ...Object.entries(def.masks || {}).map(([n, m]) => [n, m.file])];
-    await Promise.all(files.map(async ([n, file]) => { images[n] = await loadImage(`assets/${file}`); }));
+    await Promise.all(files.map(async ([n, file]) => { images[n] = await loadImage(`${base}/${file}`); }));
     rigs[name] = { def, images, textures: {} };
   }
   return { sprites, faces, rigs };
@@ -60,12 +71,14 @@ function bindTextures(renderer, sprites, faces, rigAssets, light, shadow) {
 }
 
 async function boot() {
+  const params = new URLSearchParams(location.search);
+  const character = await loadCharacter(params.get('character') || 'claude');
   const host = createHost();
-  const init = await host.init();
+  const init = await host.init(character);
   const glCanvas = document.getElementById('gl');
   const canvas2d = document.getElementById('sprite2d');
   const fx = new Effects(document.getElementById('fx'));
-  const { sprites, faces, rigs: rigAssets } = await loadAssets();
+  const { sprites, faces, rigs: rigAssets } = await loadAssets(character);
   const light = makeLightLine();
   const shadow = makeShadow();
 
@@ -76,18 +89,18 @@ async function boot() {
   };
   let renderer;
   try {
-    if (new URLSearchParams(location.search).get('renderer') === '2d') throw new Error('2D forced by URL');
+    if (params.get('renderer') === '2d') throw new Error('2D forced by URL');
     renderer = new Renderer(glCanvas);
   } catch (err) {
     console.warn(`WebGL unavailable (${err.message}); drawing with canvas 2D`);
     renderer = use2d();
   }
   bindTextures(renderer, sprites, faces, rigAssets, light, shadow);
-  const rigs = Object.fromEntries(Object.entries(rigAssets).map(([n, r]) => [n, new Rig(r.def, r.textures)]));
+  const rigs = Object.fromEntries(Object.entries(rigAssets).map(([n, r]) => [n, new Rig(r.def, r.textures, character)]));
   const rebindRigs = () => Object.entries(rigs).forEach(([n, r]) => r.rebind(rigAssets[n].textures));
 
   const bubble = { el: document.getElementById('bubble'), text: document.getElementById('bubble-text') };
-  const pet = new Pet({ host, renderer, fx, bubble, sprites, faces, rigs, light, shadow, init });
+  const pet = new character.Pet({ host, renderer, fx, bubble, sprites, faces, rigs, light, shadow, init, character });
   window.pet = pet; // handy from devtools and headless tests
 
   const resize = () => {
@@ -152,13 +165,14 @@ async function boot() {
     pet.setIgnore(!pet.hitAt(c.x - w.x, c.y - w.y));
   }, 120);
 
+  const ready = { character: character.name, renderer: renderer.kind, rigs: Object.keys(rigs) };
   // ?manual (preview only): no clock; tests advance time with window.step(frames, dt)
-  if (host.preview && new URLSearchParams(location.search).has('manual')) {
+  if (host.preview && params.has('manual')) {
     window.step = (frames = 1, dt = FRAME) => {
       for (let i = 0; i < frames; i++) pet.update(dt);
       pet.render();
     };
-    host.emit('ready', { renderer: renderer.kind, rigs: Object.keys(rigs), manual: true });
+    host.emit('ready', { ...ready, manual: true });
     return;
   }
 
@@ -177,9 +191,7 @@ async function boot() {
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
-  host.emit('ready', {
-    renderer: renderer.kind, rigs: Object.keys(rigs), sprites: Object.keys(sprites), faces: Object.keys(faces),
-  });
+  host.emit('ready', { ...ready, sprites: Object.keys(sprites), faces: Object.keys(faces) });
 }
 
 boot().catch((err) => {

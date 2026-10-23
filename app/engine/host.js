@@ -15,14 +15,15 @@ function previewHost() {
   const host = {
     preview: true,
     events,
-    async init() {
-      const width = Math.round(petHeight * 1.8);
-      const height = Math.round(petHeight * 1.75);
+    // the window is shaped like the character's pack says (character.json "window")
+    async init(character) {
+      const { aspect = [1.8, 1.75], footY = 0.16 } = (character && character.window) || {};
+      const width = Math.round(petHeight * aspect[0]);
+      const height = Math.round(petHeight * aspect[1]);
       const footX = width / 2;
-      const footY = height - Math.round(petHeight * 0.16);
       const screen = { x: 0, y: 0, width: 1920, height: 1080 };
       return {
-        layout: { petHeight, width, height, footX, footY },
+        layout: { petHeight, width, height, footX, footY: height - Math.round(petHeight * footY) },
         foot: { x: 960, y: 1040 },
         displays: [{ id: 1, primary: true, bounds: screen, workArea: { ...screen, height: 1040 } }],
         settings: { quiet: false, wander: params.get('wander') !== '0', size: 'medium' },

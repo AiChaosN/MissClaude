@@ -16,12 +16,7 @@
 //
 // Everything here is pure data and arithmetic, so the core tests can import it.
 
-export const ease = {
-  smooth: (x) => x * x * (3 - 2 * x),
-  out: (x) => 1 - (1 - x) * (1 - x),
-  in: (x) => x * x,
-  back: (x) => 1 + 2.7 * (x - 1) ** 3 + 1.7 * (x - 1) ** 2,
-};
+import { ease } from '../../engine/anim.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 // 0 before a, 1 after b, smooth in between

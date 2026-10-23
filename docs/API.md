@@ -322,9 +322,9 @@ data: {"id":42,"type":"click","ts":"…","data":{"state":"idle"}}
 | 接口 | 返回 |
 |---|---|
 | `GET /v1/health` | `{"ok": true, "api": 1, "ready": true}` |
-| `GET /v1/capabilities` | 支持的 actions、expressions、事件类型和说明、规则运算符、各种上限。接口本身是自描述的 |
+| `GET /v1/capabilities` | 当前角色（`character`）、支持的 actions、expressions、事件类型和说明、规则运算符、各种上限。接口本身是自描述的；换了角色包这些列表会不一样，先查再用 |
 | `POST /v1/admin/restart` | 让正在运行的桌宠在自己所在的桌面会话里重启（部署更新后用）。返回 202 |
-| `GET /v1/state` | `state`、`speaking`、`visible`、`foot`（屏幕坐标）、`size`、`quiet`、`rulesError`（rules.json 解析失败时的原因）、`signals`（每个信号的最新值） |
+| `GET /v1/state` | `state`、`speaking`、`visible`、`character`、`foot`（屏幕坐标）、`size`、`quiet`、`rulesError`（rules.json 解析失败时的原因）、`signals`（每个信号的最新值） |
 
 ---
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Downscale art/work sprites into app/assets with a manifest the renderer reads.
+"""Downscale art/work sprites into the Claude pack (app/characters/claude/assets) with a manifest the renderer reads.
 
 Every pose is normalised so the head is the same size as in idle (found by
 multi-scale template matching of the idle face), then trimmed. Anchors:
@@ -22,7 +22,7 @@ from matting import read_rgba, write_rgba  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "art/work"
-OUT = ROOT / "app/assets"
+OUT = ROOT / "app/characters/claude/assets"
 EXPORT_SCALE = 0.5
 
 # idle face used as the template for scale/position matching (source px)
@@ -284,8 +284,9 @@ def main():
     icon = Image.fromarray(np.clip(np.dstack([head_crop[..., :3], a[..., 0] * 255]), 0, 255)
                            .astype(np.uint8), "RGBA")
     icon.save(OUT / "icon.png")
-    icon.save(OUT / "icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64),
-                                       (128, 128), (256, 256)])
+    # the app's own icon (exe, window) is Claude's whichever pack is active
+    icon.save(ROOT / "app/assets/icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64),
+                                                   (128, 128), (256, 256)])
     icon.resize((32, 32), Image.LANCZOS).save(OUT / "tray.png")
     icon.resize((64, 64), Image.LANCZOS).save(OUT / "tray@2x.png")
 

@@ -8,14 +8,6 @@ const { EventEmitter } = require('node:events');
 const { RuleEngine, OPS, renderTemplate } = require('./rules');
 
 const API_VERSION = 1;
-const BASE_ACTIONS = ['idle', 'wave', 'cheer', 'think', 'sit', 'sleep', 'wake', 'walk', 'chatter', 'work', 'work_end'];
-// the performances in app/renderer/actions.js (tests/core.test.js keeps this list in sync)
-const LIBRARY_ACTIONS = [
-  'angry', 'awkward', 'smirk', 'shy', 'sad', 'idea', 'cheer_on', 'raise_hand', 'stretch', 'point', 'giggle',
-  'wink', 'dance', 'proud', 'startled', 'bored', 'confused', 'sneeze', 'look_around', 'peek', 'hum',
-];
-const ACTIONS = [...BASE_ACTIONS, ...LIBRARY_ACTIONS];
-const EXPRESSIONS = ['happy', 'surprised', 'pout', 'angry', 'smirk', 'awkward', 'teary', 'wink', 'blush', 'neutral'];
 const PRIORITIES = ['normal', 'high'];
 const EVENTS = {
   ready: 'renderer loaded',
@@ -46,10 +38,16 @@ const HISTORY = 200;
 class InputError extends Error {}
 
 class PetController extends EventEmitter {
-  constructor({ send, rules = [] }) {
+  // character: the pack's character.json - what the pet can do (actions: the pack's
+  // own states plus the engine's; library: its timed performances; expressions)
+  constructor({ send, rules = [], character = null }) {
     super();
     this.setMaxListeners(100);
     this.send = send;
+    const ch = character || require('../characters/claude/character.json');
+    this.character = ch.name;
+    this.actions = [...ch.actions, ...ch.library];
+    this.expressions = [...ch.expressions, 'neutral'];
     this.engine = new RuleEngine(rules);
     this.seq = 0;
     this.history = [];
@@ -87,8 +85,8 @@ class PetController extends EventEmitter {
   say({ text, duration, expression, priority = 'normal' } = {}) {
     if (typeof text !== 'string' || !text.trim()) throw new InputError('"text" must be a non-empty string');
     if (Array.from(text).length > MAX_TEXT) throw new InputError(`"text" is limited to ${MAX_TEXT} characters`);
-    if (expression !== undefined && !EXPRESSIONS.includes(expression)) {
-      throw new InputError(`unknown expression "${expression}" (use ${EXPRESSIONS.join(', ')})`);
+    if (expression !== undefined && !this.expressions.includes(expression)) {
+      throw new InputError(`unknown expression "${expression}" (use ${this.expressions.join(', ')})`);
     }
     if (!PRIORITIES.includes(priority)) throw new InputError(`priority must be one of ${PRIORITIES.join(', ')}`);
     this.send({ type: 'say', text, duration: num(duration), expression, priority, source: 'api' });
@@ -96,13 +94,13 @@ class PetController extends EventEmitter {
   }
 
   act({ action, duration, x, dx } = {}) {
-    if (!ACTIONS.includes(action)) throw new InputError(`unknown action "${action}" (use ${ACTIONS.join(', ')})`);
+    if (!this.actions.includes(action)) throw new InputError(`unknown action "${action}" (use ${this.actions.join(', ')})`);
     this.send({ type: 'act', action, duration: num(duration), x: num(x), dx: num(dx) });
     return { ok: true };
   }
 
   expression({ name, duration } = {}) {
-    if (!EXPRESSIONS.includes(name)) throw new InputError(`unknown expression "${name}" (use ${EXPRESSIONS.join(', ')})`);
+    if (!this.expressions.includes(name)) throw new InputError(`unknown expression "${name}" (use ${this.expressions.join(', ')})`);
     this.send({ type: 'expression', name, duration: num(duration) });
     return { ok: true };
   }
@@ -142,8 +140,8 @@ class PetController extends EventEmitter {
       if (!s || typeof s !== 'object') throw new InputError(`step ${i}: must be an object`);
       const at = num(s.at) ?? 0;
       if (at < 0 || at > MAX_PERFORM_SECONDS) throw new InputError(`step ${i}: "at" must be 0..${MAX_PERFORM_SECONDS} seconds`);
-      if (s.action !== undefined && !ACTIONS.includes(s.action)) throw new InputError(`step ${i}: unknown action "${s.action}"`);
-      if (s.expression !== undefined && !EXPRESSIONS.includes(s.expression)) throw new InputError(`step ${i}: unknown expression "${s.expression}"`);
+      if (s.action !== undefined && !this.actions.includes(s.action)) throw new InputError(`step ${i}: unknown action "${s.action}"`);
+      if (s.expression !== undefined && !this.expressions.includes(s.expression)) throw new InputError(`step ${i}: unknown expression "${s.expression}"`);
       if (s.say !== undefined && (typeof s.say !== 'string' || Array.from(s.say).length > MAX_TEXT)) {
         throw new InputError(`step ${i}: "say" must be a string of at most ${MAX_TEXT} characters`);
       }
@@ -242,8 +240,9 @@ class PetController extends EventEmitter {
   capabilities() {
     return {
       api: API_VERSION,
-      actions: ACTIONS,
-      expressions: EXPRESSIONS,
+      character: this.character,
+      actions: this.actions,
+      expressions: this.expressions,
       priorities: PRIORITIES,
       events: EVENTS,
       rule_ops: OPS,
@@ -260,4 +259,4 @@ function num(v) {
   return n;
 }
 
-module.exports = { PetController, InputError, API_VERSION, ACTIONS, LIBRARY_ACTIONS, EXPRESSIONS, EVENTS };
+module.exports = { PetController, InputError, API_VERSION, EVENTS };
