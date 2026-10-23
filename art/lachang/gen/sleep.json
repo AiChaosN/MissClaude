@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve (same character, new pose)\nAsset type: desktop-pet sprite (will be chroma-keyed to transparency)\nInput images: Image 1: character reference (breed, colours, fur, face, art style)\nPrimary request: The same dachshund lying on the floor fast asleep, curled into a loose crescent on its side: the head resting on its front paws, both eyes closed in relaxed curved lines, the mouth closed and peaceful, the long ears spread out softly on the floor, the tail curled around toward the nose. Seen from slightly above and the side, three-quarter view.\nComposition: square 1:1 canvas, the whole dog visible and centered, nothing cropped (ears, tail and paws inside the frame with a small margin). Draw the dog at the same scale as in Image 1 - its head the same size.\nBackground: a perfectly flat, uniform chroma-key green (#00FF00) filling the entire canvas edge to edge - no gradient, no floor, no cast shadow, no decorations, no text, no watermark. Keep the dog's fur edges crisp against it, with no green spill or glow on the dog.\nCharacter lock (do not redesign the dog): the exact same long-haired chocolate-and-tan dachshund puppy as Image 1 - dark chocolate-brown silky coat with warm tan/orange markings on the muzzle, above the eyes, on the chest, the legs and the paws; very long, wavy, feathered ears hanging down beside the head; big round dark-brown eyes with bright white highlights; a dark brown nose; a long, low sausage body on short legs; a long feathered tail. Same semi-realistic illustrated style with soft painted fur strokes and warm lighting as Image 1.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/source/dachshund_ref.png"
+  ],
+  "thread_id": "01a16925-b2ca-7f71-b482-97133bbe6f2c",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16925-b2ca-7f71-b482-97133bbe6f2c/exec-15964438-4593-4024-9af0-acecc378a4ca.png",
+  "seconds": 59.4
+}

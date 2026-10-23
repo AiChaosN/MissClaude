@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: ONLY the face: an angry growl - the eyebrows (the tan spots above the eyes) lowered and pulled toward the middle, the eyes narrowed, the muzzle wrinkled and the mouth open showing small white teeth. Keep the head position, the ears, the nose, the fur and everything else unchanged; only the named part of the face changes.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.

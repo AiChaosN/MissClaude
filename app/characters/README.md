@@ -1,6 +1,6 @@
 # 角色包（character packs）
 
-一个角色一个文件夹。引擎（`app/engine/`、`app/core/`、`app/main.js`）不认识任何具体角色：
+一个角色一个文件夹。现在有两个：`claude`（她）和 `lachang`（长毛腊肠犬）。引擎（`app/engine/`、`app/core/`、`app/main.js`）不认识任何具体角色：
 窗口比例、菜单、能做的动作、骨骼怎么动、待机时干什么，全部来自角色包。启动时用设置里的
 `character`（默认 `claude`）选包；装了多个包时右键菜单会多一项"角色"。
 
@@ -51,7 +51,7 @@ app/characters/<name>/
 | `headBone` | 表情补丁跟随的骨骼（默认 `head`）；`faceGroups` 让某组补丁跟别的骨骼 |
 | `rigFor` | 精灵名 → 画它的骨骼名；没有骨骼的精灵整图绘制 |
 | `faceSets` | 精灵名 → 用哪套表情补丁 |
-| `walk` | `{ speed, stride }`：步速（DIP/s，中号）和步长/身高，要和 walk poser 的腿摆幅匹配 |
+| `walk` | `{ speed, stride, faces }`：步速（DIP/s，中号）、步长/身高（要和 walk poser 的腿摆幅匹配）、走路素材朝向（+1 朝右，-1 朝左） |
 | `shadowWidth` | 精灵名 → 接触阴影宽度/身高 |
 | `busyStates` | 不接受待机决策和大多数反应的状态 |
 | `pettable` | 摸头有效的状态 |
@@ -81,6 +81,17 @@ app/characters/<name>/
 约定的精灵名：`idle`（站姿，决定布局）、`walk`、`drag`（被拎起，锚点在头）；约定的骨骼名：`stand`、`walk`、`drag`；
 睡着的状态叫 `sleep`（点一下会醒）。`setProps(rigName, x0, x1, opacity)` / `slit()` 可以让某个骨骼的道具层
 （`propView`）在两道光之间自己出现（Claude 的书桌就是这么来的）。
+
+## 做第二个角色时的经验（lachang）
+
+- 一张参考图就够：先让 GPT 出一张纯绿背景的重绘（像素对齐），其余全是对它的编辑——各部位涂成单色拿遮罩
+  （耳朵品红、尾巴青、四条腿蓝）、把部位去掉拿它后面的内容、换表情拿脸部补丁、再画几个整图姿势（被拎、坐、趴、睡、讨食）。
+  提示词在 `tools/lachang/prompts.py`，`tools/lachang/gen.sh` 批量跑，`tools/lachang/build.py` 抠图、切层、导出。
+- 毛茸茸的画风每次重绘都带约 25/255 的笔触噪声，脸部补丁的差异阈值要比动漫风高（眼/嘴 45，整脸 38），否则整张脸都算"变了"。
+- 单色涂色会比真实毛边缩进几个像素：遮罩膨胀 3-5 px 再切层，不然部位一动就露一道浅缝。
+- 藏在头后面的部位（右耳根、脖子）要在头的多边形里补画毛（telea 修补），头一转、耳朵一甩才不会露白。
+- 走路不一定要新画：四条腿分层后，站姿骨骼加 `phase`/`stride` 参数就能小跑；`walk` 精灵指向站姿图即可。
+- 四足角色的窗口比例和脚下余量都要重调（`tools/edgecheck.py` 每档大小都跑一遍）；吊起来的姿势最容易碰窗口底边。
 
 ## 校验
 

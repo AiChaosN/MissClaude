@@ -1,0 +1,5 @@
+Use case: identity-preserve / precise-object-edit
+Asset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)
+Input images: Image 1: edit target
+Change: remove BOTH ears completely, as if the dog had no ears. Where they were, draw what is behind them: the side of the head, the neck and the chest fur continuing naturally in the same colours and fur strokes (a smooth rounded head without ear flaps); where only background was behind them show the flat chroma-green background.
+Keep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.

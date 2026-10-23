@@ -1,0 +1,226 @@
+{
+ "exportScale": 0.5,
+ "sprites": {
+  "idle": {
+   "file": "sprites/idle.png",
+   "w": 606,
+   "h": 597,
+   "head": [
+    214.0,
+    143.0
+   ],
+   "foot": [
+    303.0,
+    590.0
+   ],
+   "group": "idle",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 0.0
+  },
+  "drag": {
+   "file": "sprites/drag.png",
+   "w": 296,
+   "h": 621,
+   "head": [
+    151.8,
+    101.5
+   ],
+   "foot": [
+    148.0,
+    614.0
+   ],
+   "group": "drag",
+   "sway": "sprites/drag_sway.png",
+   "swayAmp": 0.0
+  },
+  "sit": {
+   "file": "sprites/sit.png",
+   "w": 573,
+   "h": 599,
+   "head": [
+    209.2,
+    144.0
+   ],
+   "foot": [
+    286.5,
+    592.5
+   ],
+   "group": "sit",
+   "sway": "sprites/sit_sway.png",
+   "swayAmp": 0.0
+  },
+  "sleep": {
+   "file": "sprites/sleep.png",
+   "w": 623,
+   "h": 325,
+   "head": [
+    229.5,
+    170.5
+   ],
+   "foot": [
+    311.5,
+    318.0
+   ],
+   "group": "sleep",
+   "sway": "sprites/sleep_sway.png",
+   "swayAmp": 0.0
+  },
+  "beg": {
+   "file": "sprites/beg.png",
+   "w": 476,
+   "h": 608,
+   "head": [
+    170.0,
+    116.0
+   ],
+   "foot": [
+    238.0,
+    601.5
+   ],
+   "group": "beg",
+   "sway": "sprites/beg_sway.png",
+   "swayAmp": 0.0
+  },
+  "lie": {
+   "file": "sprites/lie.png",
+   "w": 625,
+   "h": 252,
+   "head": [
+    239.5,
+    144.2
+   ],
+   "foot": [
+    312.5,
+    245.0
+   ],
+   "group": "lie",
+   "sway": "sprites/lie_sway.png",
+   "swayAmp": 0.0
+  },
+  "walk": {
+   "file": "sprites/idle.png",
+   "w": 606,
+   "h": 597,
+   "head": [
+    214.0,
+    143.0
+   ],
+   "foot": [
+    303.0,
+    590.0
+   ],
+   "group": "walk",
+   "sway": "sprites/idle_sway.png",
+   "swayAmp": 0.0
+  }
+ },
+ "faces": {
+  "idle": {
+   "blink": {
+    "file": "faces/idle_blink.png",
+    "group": "eyes",
+    "x": 134,
+    "y": 68
+   },
+   "half": {
+    "file": "faces/idle_eyes_half.png",
+    "group": "eyes",
+    "x": 136,
+    "y": 68
+   },
+   "look_left": {
+    "file": "faces/idle_look_left.png",
+    "group": "eyes",
+    "x": 142,
+    "y": 81
+   },
+   "look_right": {
+    "file": "faces/idle_look_right.png",
+    "group": "eyes",
+    "x": 142,
+    "y": 80
+   },
+   "wink": {
+    "file": "faces/idle_wink.png",
+    "group": "eyes",
+    "x": 240,
+    "y": 88
+   },
+   "happy": {
+    "file": "faces/idle_happy.png",
+    "group": "face",
+    "x": 114,
+    "y": 61
+   },
+   "surprised": {
+    "file": "faces/idle_surprised.png",
+    "group": "face",
+    "x": 114,
+    "y": 58
+   },
+   "sad": {
+    "file": "faces/idle_sad.png",
+    "group": "face",
+    "x": 114,
+    "y": 58
+   },
+   "angry": {
+    "file": "faces/idle_angry.png",
+    "group": "face",
+    "x": 114,
+    "y": 58
+   },
+   "smirk": {
+    "file": "faces/idle_smirk.png",
+    "group": "face",
+    "x": 114,
+    "y": 58
+   },
+   "tongue": {
+    "file": "faces/idle_tongue.png",
+    "group": "mouth",
+    "x": 111,
+    "y": 203
+   },
+   "mouth_tongue": {
+    "file": "faces/idle_tongue.png",
+    "group": "mouth",
+    "x": 111,
+    "y": 203
+   },
+   "mouth_a": {
+    "file": "faces/idle_mouth_open.png",
+    "group": "mouth",
+    "x": 109,
+    "y": 203
+   },
+   "mouth_o": {
+    "file": "faces/idle_mouth_open.png",
+    "group": "mouth",
+    "x": 109,
+    "y": 203
+   },
+   "mouth_e": {
+    "file": "faces/idle_mouth_half.png",
+    "group": "mouth",
+    "x": 109,
+    "y": 203
+   },
+   "mouth_i": {
+    "file": "faces/idle_mouth_half.png",
+    "group": "mouth",
+    "x": 109,
+    "y": 203
+   },
+   "mouth_u": {
+    "file": "faces/idle_mouth_half.png",
+    "group": "mouth",
+    "x": 109,
+    "y": 203
+   }
+  }
+ },
+ "rigs": {
+  "stand": "rig_stand.json"
+ }
+}

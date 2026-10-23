@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY the eyes: both irises and pupils moved to the viewer's LEFT edge of the eyes, as if the dog glances sideways to its right; eye shapes, highlights and eyelids unchanged. Keep the head position, the ears, the nose, the fur and everything else unchanged; only the named part of the face changes.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/gen/base_green.png"
+  ],
+  "thread_id": "01a16923-ce83-7282-9ea2-4e9b1b718581",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16923-ce83-7282-9ea2-4e9b1b718581/exec-3a47ee7d-a1aa-46d8-9ffd-1a56763bcf20.png",
+  "seconds": 41.5
+}

@@ -9,6 +9,7 @@ Scenarios are JavaScript snippets run once before recording (see SCENES).
 import argparse
 import functools
 import http.server
+import json
 import threading
 from pathlib import Path
 
@@ -94,6 +95,22 @@ SCENES = {
                  "else pet.cursor = null;",
     },
     # a timeline: [(seconds, js), ...]
+    # the dachshund pack (--character lachang): greet, trot, curious, bark, sit, play bow, pick-up
+    "lachang": {
+        "setup": [
+            (0.0, "pet.setState('idle'); pet.nextDecision = 1e9; petCommand({type: 'act', action: 'wag'});"),
+            (2.8, "pet.settings.wander = false; pet.setState('walk', {target: pet.foot.x + 260});"),
+            (6.2, "pet.setState('idle'); pet.nextDecision = 1e9; petCommand({type: 'act', action: 'tilt'});"),
+            (9.2, "petCommand({type: 'act', action: 'bark'});"),
+            (11.0, "petCommand({type: 'act', action: 'sit', duration: 3}); petCommand({type: 'say', text: '坐好了！', source: 'api', duration: 1.6});"),
+            (14.6, "pet.setState('idle'); pet.nextDecision = 1e9; petCommand({type: 'act', action: 'bow'});"),
+            (17.8, "pet.setState('idle'); petCommand({type: 'act', action: 'howl'});"),
+            (21.0, "pet.cursor = {x: pet.foot.x, y: pet.foot.y - 150}; pet.startDrag(); pet.omega = 2.0;"),
+            (23.4, "pet.dragV = {x: 200, y: -300}; pet.release();"),
+        ],
+        "frame": "if (pet.state === 'drag') { pet.cursor = {x: pet.foot.x - pet.grab.x + 9 * Math.sin(i / 3), "
+                 "y: pet.foot.y - pet.grab.y + 4 * Math.cos(i / 5)}; }",
+    },
     "showcase": [
         (0.0, "pet.setState('idle'); pet.nextDecision = 1e9;"),
         (1.6, "petCommand({type: 'act', action: 'wave', duration: 2.2}); "
@@ -103,6 +120,13 @@ SCENES = {
         (9.2, "pet.idleAct = {kind: 'peek', until: pet.t + 2, dir: 1};"),
     ],
 }
+
+
+def window_size(character, size):
+    """The pet window's css size for a pack, as app/main.js computes it."""
+    info = json.loads((APP / "characters" / character / "character.json").read_text())
+    aspect = info.get("window", {}).get("aspect", [1.8, 1.75])
+    return round(size * aspect[0]), round(size * aspect[1])
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -117,6 +141,7 @@ def main() -> None:
     ap.add_argument("--seconds", type=float, default=3.0)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--size", type=int, default=200)
+    ap.add_argument("--character", default="claude", help="character pack (app/characters/<name>)")
     ap.add_argument("--dpr", type=float, default=1.5)
     ap.add_argument("--crop", default="", help="x0,y0,x1,y1 in css px to crop each frame")
     args = ap.parse_args()
@@ -124,8 +149,9 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=str(APP)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    url = f"http://127.0.0.1:{server.server_port}/index.html?preview&manual&wander=0&size={args.size}"
-    w, h = round(args.size * 1.8), round(args.size * 1.75)
+    url = (f"http://127.0.0.1:{server.server_port}/index.html?preview&manual&wander=0&size={args.size}"
+           f"&character={args.character}")
+    w, h = window_size(args.character, args.size)
     frames = []
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--enable-unsafe-swiftshader", "--use-angle=swiftshader"])

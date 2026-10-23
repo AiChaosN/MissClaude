@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove all FOUR legs and paws completely, as if the dog's body were floating with no legs. Where the legs joined the body, continue the chest and belly fur naturally into a smooth, rounded underside in the same colours and strokes; where only background was behind the legs show the flat chroma-green background.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/gen/base_green.png"
+  ],
+  "thread_id": "01a16924-70bd-7690-ae64-907813e7017c",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16924-70bd-7690-ae64-907813e7017c/exec-ae2bef48-d90b-4b06-884c-a3a70a0062f4.png",
+  "seconds": 48.8
+}

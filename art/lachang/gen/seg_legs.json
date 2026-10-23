@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: precise-object-edit (segmentation mask)\nAsset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1\nInput images: Image 1: edit target\nChange: recolor all FOUR legs - each leg from where it leaves the body down to and including its paw and claws - to pure blue (#0000FF). The body, chest and belly fur above the legs stay as they are. Use one flat, uniform colour with no shading, highlights, fur strokes or lines inside the recoloured area, and a clean edge that follows the fur silhouette exactly. Do NOT recolor anything else; the rest of the dog and the green background stay exactly as they are.\nKeep the image pixel-aligned with Image 1: same canvas, same silhouette and position of everything; only the colour of the named part changes.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/gen/base_green.png"
+  ],
+  "thread_id": "01a16925-2be0-7ba0-b74d-d982e329f16d",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16925-2be0-7ba0-b74d-d982e329f16d/exec-77b1dce4-eee3-4d53-a9ed-cff4eaa18ae5.png",
+  "seconds": 43.3
+}

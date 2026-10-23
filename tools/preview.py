@@ -10,6 +10,7 @@ window, composited on a light and a dark backdrop side by side.
 import argparse
 import functools
 import http.server
+import json
 import threading
 from pathlib import Path
 
@@ -42,6 +43,13 @@ SCENARIOS = {
 }
 
 
+def window_size(character, size):
+    """The pet window's css size for a pack, as app/main.js computes it."""
+    info = json.loads((APP / "characters" / character / "character.json").read_text())
+    aspect = info.get("window", {}).get("aspect", [1.8, 1.75])
+    return round(size * aspect[0]), round(size * aspect[1])
+
+
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -61,6 +69,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
     ap.add_argument("--size", type=int, default=200)
+    ap.add_argument("--character", default="claude", help="character pack (app/characters/<name>)")
     ap.add_argument("--renderer", choices=["webgl", "2d"], default="webgl")
     ap.add_argument("--scenarios", default=",".join(SCENARIOS))
     args = ap.parse_args()
@@ -70,8 +79,8 @@ def main() -> None:
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=str(APP)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     url = (f"http://127.0.0.1:{server.server_port}/index.html?preview&wander=0&size={args.size}"
-           f"&renderer={args.renderer}")
-    width, height = round(args.size * 1.8), round(args.size * 1.75)
+           f"&renderer={args.renderer}&character={args.character}")
+    width, height = window_size(args.character, args.size)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(args=["--enable-unsafe-swiftshader", "--use-angle=swiftshader",

@@ -9,6 +9,10 @@
 更多效果：[动作库](docs/actions_showcase.webp) · [工作模式](docs/work_showcase.webp) · [眼神与口型](docs/eyes_showcase.webp) ·
 [骨骼细节](docs/rig_v3_showcase.webp) · [观感打磨](docs/polish_showcase.webp)
 
+她不是唯一的住客：引擎和角色是分开的，`app/characters/` 里一个文件夹就是一个角色包。第二个包是一只长毛腊肠犬
+**lachang**（[效果](docs/lachang_showcase.webp)）——同一套引擎、接口和规则，换一套素材、骨骼 poser、动作库和台词。
+右键菜单的"角色"可以切换（会重启）。怎么做一个新角色见 [app/characters/README.md](app/characters/README.md)。
+
 ## 运行
 
 **直接用**：到 [Releases](https://github.com/AiChaosN/MissClaude/releases) 下载 `MissClaude-win32-x64-v*.zip`，解压后运行
@@ -46,7 +50,7 @@ tools/deploy_windows.sh --shortcut
 | 新的**台词池** | 规则的 `say` 写成列表，随机挑一句 | 不用 |
 | 产品对她的**反应**（点她贪睡、摸头确认） | 订阅 `click` / `pet` / `drop` 等事件 | 不用 |
 | 一个**新的基础动作**（新的手臂姿势、新表情） | 让 GPT 画一张对齐的改图 → `tools/build_rig.py` 的 `ARM_VARIANTS` / `build_assets.py` 的脸部表 → `actions.js` 加一条时间轴 | 要改，约 15 分钟一个 |
-| **换角色** | 加一个角色包 `app/characters/<name>/`（素材、骨骼 poser、动作库、台词、自己的状态），引擎不用动；见 `app/characters/README.md` | 要画新素材，程序只加包 |
+| **换角色** | 加一个角色包 `app/characters/<name>/`（素材、骨骼 poser、动作库、台词、自己的状态），引擎不用动；腊肠犬 `lachang` 就是这么加的，见 `app/characters/README.md` | 要画新素材，程序只加包 |
 
 扩展点和限制：
 - 接口有版本号（`/v1`）和自描述的 `/v1/capabilities`（动作、表情、事件、规则运算符、信号、上限），产品可以先查再用。
@@ -243,6 +247,7 @@ app/                      Electron 应用（部署时整个目录被同步到 Wi
     actions.js            动作库：21 个带时间轴的连贯表演
     lines.js              台词
     assets/               已导出的精灵、骨骼、表情贴图
+  characters/lachang/     腊肠犬角色包：一套骨骼（站 + 小跑）、坐/趴/睡/讨食整图、16 个动作；素材管线在 tools/lachang/
 clients/python/           Python 客户端 + 命令行
 integrations/claude-code/ Claude Code hook 脚本
 examples/usage_demo.py    模拟用量曲线，演示规则触发
@@ -259,6 +264,9 @@ node --test tests/                       # 规则引擎、controller、HTTP/SSE�
 python3 tests/interaction_test.py        # 用模拟鼠标测：点击、双击、连戳、拖拽和下落、摸头
 python3 tools/preview.py /tmp/pet        # headless 渲染每个状态的截图（--renderer 2d 测兜底渲染）
 python3 tools/record.py /tmp/rec showcase3 --seconds 26  # 逐帧确定性录制成 WebP 动图（act:<动作名>、work、eyes…）
+python3 tools/record.py /tmp/rec lachang --character lachang --seconds 27   # 另一个角色包
+python3 tools/regress.py record base.json && python3 tools/regress.py compare base.json  # 固定随机数逐帧比像素：改引擎前后她不能变
+python3 tools/edgecheck.py --character lachang   # 每个姿势、每档大小都不碰窗口边
 ```
 
 ## 运行时文件

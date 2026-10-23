@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: background-extraction\nAsset type: desktop-pet sprite source (will be chroma-keyed to transparency)\nInput images: Image 1: edit target\nChange: replace ONLY the background. Background: a perfectly flat, uniform chroma-key green (#00FF00) filling the entire canvas edge to edge - no gradient, no floor, no cast shadow, no decorations, no text, no watermark. Keep the dog's fur edges crisp against it, with no green spill or glow on the dog. Also remove the soft shadow on the ground under the dog.\nThe dog must stay 100% unchanged and pixel-aligned with Image 1: identical pose, position, scale, silhouette, fur strokes, colours and shading, every strand of the ears and tail.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/source/dachshund_ref.png"
+  ],
+  "thread_id": "01a16921-a404-7353-8af8-9dca2be32c02",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16921-a404-7353-8af8-9dca2be32c02/exec-49a0d138-7153-4a75-b3ef-17eb3f64fd99.png",
+  "seconds": 52.4
+}

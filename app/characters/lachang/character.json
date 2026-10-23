@@ -1,0 +1,19 @@
+{
+  "name": "lachang",
+  "title": "腊肠 Lachang",
+  "window": { "aspect": [1.9, 1.8], "footY": 0.24 },
+  "sizes": { "small": 130, "medium": 170, "large": 220 },
+  "menu": [
+    { "label": "汪一声", "action": "bark" },
+    { "label": "坐下", "action": "sit" },
+    { "label": "趴下", "action": "lie" },
+    { "label": "睡觉", "action": "sleep" },
+    { "label": "说句话", "action": "chatter" }
+  ],
+  "actions": ["idle", "sit", "lie", "sleep", "wake", "beg", "walk", "chatter"],
+  "library": [
+    "wag", "bark", "tilt", "shake", "bow", "sniff", "scratch", "growl", "howl", "sad", "yawn", "startled",
+    "smirk", "dance", "pant", "wink"
+  ],
+  "expressions": ["happy", "surprised", "sad", "angry", "smirk", "wink", "tongue"]
+}

@@ -1,0 +1,5 @@
+Use case: precise-object-edit (segmentation mask)
+Asset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1
+Input images: Image 1: edit target
+Change: recolor BOTH ears - the whole of each long feathered ear, from where it joins the top of the head down to the tips of the wavy fringe - to pure magenta (#FF00FF). Use one flat, uniform colour with no shading, highlights, fur strokes or lines inside the recoloured area, and a clean edge that follows the fur silhouette exactly. Do NOT recolor anything else; the rest of the dog and the green background stay exactly as they are.
+Keep the image pixel-aligned with Image 1: same canvas, same silhouette and position of everything; only the colour of the named part changes.

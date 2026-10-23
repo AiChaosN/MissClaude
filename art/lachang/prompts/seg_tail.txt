@@ -1,0 +1,5 @@
+Use case: precise-object-edit (segmentation mask)
+Asset type: segmentation mask for a desktop-pet rig; must stay pixel-aligned with Image 1
+Input images: Image 1: edit target
+Change: recolor the tail - the whole feathered tail from where it leaves the rump to its tip - to pure cyan (#00FFFF). Use one flat, uniform colour with no shading, highlights, fur strokes or lines inside the recoloured area, and a clean edge that follows the fur silhouette exactly. Do NOT recolor anything else; the rest of the dog and the green background stay exactly as they are.
+Keep the image pixel-aligned with Image 1: same canvas, same silhouette and position of everything; only the colour of the named part changes.

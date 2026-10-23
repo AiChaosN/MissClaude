@@ -141,6 +141,13 @@ export class Pet {
     return { x: w.x + this.winHead.x, y: w.y + this.winHead.y };
   }
 
+  // the head of the pose drawn right now, in window css px (winHead is the idle pose's)
+  headNow() {
+    if (!this.model) return { ...this.winHead };
+    const [x, y] = affine.apply(this.model, this.modelSprite.head[0], this.modelSprite.head[1]);
+    return { x, y };
+  }
+
   area() {
     const { x, y } = this.foot;
     let best = null;
@@ -526,8 +533,9 @@ export class Pet {
     this.walkPhase += (step / (this.ch.walk.stride * this.layout.petHeight)) * Math.PI;
     const ph = this.age * Math.PI * 2.2;
     const rigged = Boolean(this.rigs.walk);
+    // the walk art faces +x unless the pack says otherwise (walk.faces: -1)
     Object.assign(this.view, {
-      sprite: 'walk', mirror: this.dir < 0, sx: 1, sy: 1, bx: 1, by: 1,
+      sprite: 'walk', mirror: this.dir * (this.ch.walk.faces || 1) < 0, sx: 1, sy: 1, bx: 1, by: 1,
       dy: rigged ? 0 : -Math.abs(Math.sin(ph)) * 4 * this.k,
       rot: rigged ? 0 : Math.sin(ph) * 0.025,
       sway: 1.6, swayBias: -5,
@@ -946,7 +954,7 @@ export class Pet {
 
   reactClick() {
     if (this.isBusy() || this.state === 'act') return; // let the pet finish what it is doing
-    const h = this.winHead;
+    const h = this.headNow();
     const pool = this.ch.reactions.click || [];
     if (pool.length && Math.random() < 0.4 && this.rig) {
       if (this.playAction(pool[Math.floor(Math.random() * pool.length)])) return;
@@ -968,7 +976,7 @@ export class Pet {
   }
 
   onPetted() {
-    const h = this.winHead;
+    const h = this.headNow();
     if (this.rig) this.rig.kick(0.6);
     this.emit('pet', { state: this.state });
     if (this.state === 'idle' && Math.random() < 0.45 && this.playAction(this.ch.reactions.petted)) return;
@@ -1036,7 +1044,7 @@ export class Pet {
         say(this.pick('ccDone'), 'high');
         this.playAction(this.ch.reactions.done);
         break;
-      case 'SubagentStop': this.fx.sparkles(this.winHead.x, this.winHead.y, this.k, 3); break;
+      case 'SubagentStop': { const h = this.headNow(); this.fx.sparkles(h.x, h.y, this.k, 3); break; }
       default: break;
     }
   }

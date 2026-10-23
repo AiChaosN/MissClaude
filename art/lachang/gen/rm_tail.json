@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: remove the tail completely, as if the dog had no tail. Where it was, draw what is behind it: the rounded rump and hind leg fur continuing naturally in the same colours and strokes; where only background was behind it show the flat chroma-green background.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/gen/base_green.png"
+  ],
+  "thread_id": "01a16924-897f-77d1-86e8-941a285522bf",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16924-897f-77d1-86e8-941a285522bf/exec-059a2b99-182c-405d-b081-8e464e24eaac.png",
+  "seconds": 46.9
+}

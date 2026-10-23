@@ -1,0 +1,5 @@
+Use case: background-extraction
+Asset type: desktop-pet sprite source (will be chroma-keyed to transparency)
+Input images: Image 1: edit target
+Change: replace ONLY the background. Background: a perfectly flat, uniform chroma-key green (#00FF00) filling the entire canvas edge to edge - no gradient, no floor, no cast shadow, no decorations, no text, no watermark. Keep the dog's fur edges crisp against it, with no green spill or glow on the dog. Also remove the soft shadow on the ground under the dog.
+The dog must stay 100% unchanged and pixel-aligned with Image 1: identical pose, position, scale, silhouette, fur strokes, colours and shading, every strand of the ears and tail.

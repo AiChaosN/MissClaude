@@ -1,0 +1,9 @@
+{
+  "prompt": "Use case: identity-preserve / precise-object-edit\nAsset type: animation frame for a desktop-pet sprite (frames are swapped at runtime, so alignment with Image 1 matters)\nInput images: Image 1: edit target\nChange: ONLY the face: a sly, mischievous look - the eyes half-closed and glancing to the viewer's right, one eyebrow (tan spot) raised, the mouth closed in a lopsided grin pulled up on one side. Keep the head position, the ears, the nose, the fur and everything else unchanged; only the named part of the face changes.\nKeep everything else exactly identical to Image 1 and pixel-aligned with it: same canvas size, framing, position and scale of the dog, same pose, fur strokes, colours, shading and the flat green background.",
+  "refs": [
+    "/home/chaosn5090linux/Project/01_playground/MissClaude/art/lachang/gen/base_green.png"
+  ],
+  "thread_id": "01a16925-d4fd-7882-b713-59dff014bf4e",
+  "source": "/home/chaosn5090linux/.codex/generated_images/01a16925-d4fd-7882-b713-59dff014bf4e/exec-23cd2745-87b8-4e7b-8c74-426a756bd642.png",
+  "seconds": 61.7
+}
