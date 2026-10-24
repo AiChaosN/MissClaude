@@ -272,7 +272,7 @@ function briefReply(text) {
   // the first real paragraph (a bare heading does not count), then its first
   // sentence or two if that is still long
   const paras = s.split(/\n\s*\n/).map((x) => x.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
-  s = paras.find((x) => Array.from(x).length >= 8) || paras[0] || '';
+  s = paras.find((x) => Array.from(x).length >= 8) || paras.sort((a, b) => b.length - a.length)[0] || '';
   const chars = Array.from(s);
   if (chars.length <= BRIEF_CHARS) return s;
   const head = chars.slice(0, BRIEF_CHARS).join('');
