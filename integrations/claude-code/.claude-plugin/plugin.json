@@ -1,0 +1,9 @@
+{
+  "name": "missclaude",
+  "description": "Connect Claude Code to the MissClaude desktop pet (or any character pack): she works at her desk while Claude works, raises a hand when Claude needs you, speaks a one-line summary of each reply, and Claude learns to make her talk, perform and keep reminders.",
+  "version": "0.4.0",
+  "author": { "name": "AiChaosN" },
+  "homepage": "https://github.com/AiChaosN/MissClaude",
+  "repository": "https://github.com/AiChaosN/MissClaude",
+  "keywords": ["desktop-pet", "hooks", "notifications", "reminders"]
+}

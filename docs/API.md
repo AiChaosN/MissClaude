@@ -235,7 +235,7 @@ hook 脚本、`missclaude.py` 和 skill 都读这两个变量；`MISSCLAUDE_URL`
 ### `POST /v1/hooks/claude-code` Claude Code hook
 
 请求体就是 Claude Code hook 从 stdin 收到的那份 JSON，原样转发即可（脚本见
-`integrations/claude-code/missclaude-hook.sh`）。她会这样反应：
+`integrations/claude-code/hooks/missclaude-hook.sh`）。她会这样反应：
 
 | hook 事件 | 反应 |
 |---|---|
@@ -399,32 +399,18 @@ python3 examples/alarm_demo.py          # 给下一分钟装一条闹铃规则�
 
 ## 接入 Claude Code
 
-在 `~/.claude/settings.json`（或者项目的 `.claude/settings.json`）的 `hooks` 里，把想转发的事件指向这个脚本：
+仓库自带一个 Claude Code 插件（`integrations/claude-code/`，仓库本身就是它的 marketplace）：
 
-```json
-{
-  "hooks": {
-    "SessionStart":     [{ "hooks": [{ "type": "command", "command": "/path/to/MissClaude/integrations/claude-code/missclaude-hook.sh" }] }],
-    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "/path/to/MissClaude/integrations/claude-code/missclaude-hook.sh" }] }],
-    "Notification":     [{ "hooks": [{ "type": "command", "command": "/path/to/MissClaude/integrations/claude-code/missclaude-hook.sh" }] }],
-    "Stop":             [{ "hooks": [{ "type": "command", "command": "/path/to/MissClaude/integrations/claude-code/missclaude-hook.sh" }] }]
-  }
-}
+```
+/plugin marketplace add AiChaosN/MissClaude
+/plugin install missclaude@missclaude
 ```
 
-脚本始终返回 0，发给桌宠的请求 2 秒超时。桌宠没运行时，Claude Code 不会被拖慢，也不会被拦住。每个 hook 加
-`"async": true`，`Stop` 的 `timeout` 给到 60（模型总结要几秒）；`PreToolUse` / `PostToolUse` 也接上（她会坐到桌前干活）。
+装好后：你一提问她坐到书桌前写字，工具调用期间一直在干活，需要你确认时举手；**每轮回复结束她念一句总结**——
+hook 取 Claude 的最后一条回复（`last_assistant_message`，或 transcript 里的最后一条），用 `claude -p --model haiku`
+按她的口吻压成不超过 20 字的一句（腊肠犬会带"汪"），压不出来就由桌宠端截取第一句（去掉 markdown，最多 72 字）。
+插件还带一个 skill，让 Claude Code 会调她的接口：说话、动作、把提醒存成她自己的 `clock` 规则。
 
-她对各事件的反应：`SessionStart` 打招呼；`UserPromptSubmit` 收到任务、坐到书桌前；工具调用期间一直在写字；
-`Notification` 举手提醒你（短消息直接念出来）；**`Stop` 时把 Claude 这一轮回复的要点念出来**——脚本从
-hook 的 `last_assistant_message`（或 transcript）取最后一条回复，先用一个小模型（`claude -p --model haiku`，
-约 5–8 秒，hook 是 async 的所以不拖慢 Claude Code）按桌宠的口吻压成一句不超过 20 字的话（她是元气少女，
-腊肠是会说"汪"的狗）；压不出来（没装 claude、超时、输出太长）就由桌宠端机械截断（去掉 markdown，取第一段的
-第一两句，最多 72 字）。`MISSCLAUDE_SUMMARY=0` 关掉模型总结，`MISSCLAUDE_SUMMARY_MODEL` 换模型。
-`SubagentStop` 冒星星。
-
-脚本认的环境变量：`MISSCLAUDE_URL`（默认 `http://127.0.0.1:27826`）、`MISSCLAUDE_TOKEN`（桌宠在别的电脑上时）。
-
-反过来让 Claude Code **主动**使唤她（提醒、闹铃、播报），给它一个 skill 就行：仓库里的
-`integrations/claude-code/SKILL.md` 复制到 `~/.claude/skills/missclaude/SKILL.md`，之后对 Claude Code 说
-"三点半让桌宠叫我"，它会往她的规则里写一条 `clock` 规则——提醒由桌宠自己保管，Claude Code 退出了也照样响。
+桌宠在另一台电脑上时，把 `MISSCLAUDE_URL` / `MISSCLAUDE_TOKEN` 写进 Claude Code 的 `~/.claude/settings.json` 的 `env`
+（见上面"从另一台电脑访问"）。`MISSCLAUDE_SUMMARY=0` 关掉模型总结，`MISSCLAUDE_SUMMARY_MODEL` 换模型。
+细节和手工配置方式见 [integrations/claude-code/README.md](../integrations/claude-code/README.md)。

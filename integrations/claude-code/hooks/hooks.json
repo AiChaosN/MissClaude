@@ -1,0 +1,12 @@
+{
+  "description": "Forward Claude Code's lifecycle to the MissClaude desktop pet: she sits down to work during tool calls, raises a hand on notifications, and on Stop speaks a one-line summary of the reply.",
+  "hooks": {
+    "SessionStart":     [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "PreToolUse":       [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "PostToolUse":      [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "Notification":     [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "SubagentStop":     [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 10 }] }],
+    "Stop":             [{ "hooks": [{ "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/missclaude-hook.sh\"", "async": true, "timeout": 60 }] }]
+  }
+}

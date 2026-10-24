@@ -1,8 +1,10 @@
 # MissClaude
 
 拟人化的 Claude 桌宠：橙发、抱着书的 Q 版少女，住在 Windows 桌面的任务栏上面。会自己溜达、坐下看书、打瞌睡，
-能被拎起来甩着玩，会对点击和摸头做出反应。她也是一个**有输入输出接口的模块**，可以接 Claude 用量、Claude Code hook
-或者任何你想让她播报的数据，见 [docs/API.md](docs/API.md)。
+能被拎起来甩着玩，会对点击和摸头做出反应。她也是一个**有输入输出接口的模块**，可以接 Claude 用量、Claude Code
+或者任何你想让她播报的数据，见 [docs/API.md](docs/API.md)。接 Claude Code 是一个插件：
+`/plugin marketplace add AiChaosN/MissClaude` → `/plugin install missclaude@missclaude`，之后她会陪着 Claude 干活、
+每轮回复结束念一句总结，Claude Code 也学会了让她说话、做动作、定闹铃。
 
 ![states](docs/preview.png)
 
@@ -249,7 +251,7 @@ app/                      Electron 应用（部署时整个目录被同步到 Wi
     assets/               已导出的精灵、骨骼、表情贴图
   characters/lachang/     腊肠犬角色包：一套骨骼（站 + 小跑）、坐/趴/睡/讨食整图、16 个动作；素材管线在 tools/lachang/
 clients/python/           Python 客户端 + 命令行
-integrations/claude-code/ Claude Code hook 脚本
+integrations/claude-code/ Claude Code 插件：hooks（她陪着干活、念每轮回复的总结）+ skill（让 Claude Code 会使唤她）
 examples/usage_demo.py    模拟用量曲线，演示规则触发
 examples/alarm_demo.py    闹铃：一条 clock 规则 + 一段表演，点她可以贪睡
 tools/                    素材管线（build_assets / build_rig / export_assets）、预览、录制、Windows 部署、release 打包

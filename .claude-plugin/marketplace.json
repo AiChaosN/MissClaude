@@ -1,0 +1,14 @@
+{
+  "name": "missclaude",
+  "description": "Plugins from the MissClaude desktop-pet project",
+  "owner": { "name": "AiChaosN" },
+  "plugins": [
+    {
+      "name": "missclaude",
+      "description": "Connect Claude Code to the MissClaude desktop pet: she works while Claude works, raises a hand when Claude needs you, speaks a one-line summary of each reply, and Claude learns to make her talk, perform and keep reminders.",
+      "source": "./integrations/claude-code",
+      "category": "productivity",
+      "homepage": "https://github.com/AiChaosN/MissClaude"
+    }
+  ]
+}
