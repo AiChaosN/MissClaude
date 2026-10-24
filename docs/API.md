@@ -42,7 +42,9 @@
 ### 从另一台电脑访问
 
 桌宠是服务端，模型或脚本是客户端。默认只开本机，因为接口本身没有身份——谁连上端口谁就能让她说话。
-要让 B 电脑上的程序驱动 A 电脑上的她，在 A 的 `settings.json` 里加两项，重启：
+要让 B 电脑上的程序驱动 A 电脑上的她：在 A 上右键她 → **允许其他电脑连接**。她会生成一个 token、改成监听所有网卡并重启，
+同时打开一个 `connect.txt`（在 `%APPDATA%\MissClaude\`），里面有这台电脑的 IP、token、防火墙命令和 B 那边要设的
+环境变量；之后菜单里的"连接信息…"可以再打开它。手工配等价于在 A 的 `settings.json` 里加两项再重启：
 
 ```json
 { "apiHost": "0.0.0.0", "apiToken": "一串随机的长字符串" }
@@ -64,8 +66,17 @@ curl -H "Authorization: Bearer $MISSCLAUDE_TOKEN" -X POST $MISSCLAUDE_URL/v1/sig
      -H 'Content-Type: application/json' -d '{"name": "build", "value": {"status": "failed"}}'
 ```
 
-不在一个局域网：用 Tailscale 之类组网后同样做法；或者不开 `apiHost`，在 B 上 `ssh -N -L 27826:127.0.0.1:27826 user@A`，
-把 A 的端口转到 B 本机。传输没有加密，token 走的是明文 HTTP，所以只在可信网络（局域网、VPN）里用。
+不在一个局域网：两边装 Tailscale，B 用 A 的 Tailscale 地址（100.x.x.x）即可，防火墙规则照加；或者不开 `apiHost`，
+在 B 上 `ssh -N -L 27826:127.0.0.1:27826 user@A`，把 A 的端口转到 B 本机。传输没有加密，token 走的是明文 HTTP，
+所以只在可信网络（局域网、Tailscale）里用。
+
+Claude Code 在 B 上时，把这两个变量写进 B 的 `~/.claude/settings.json`：
+
+```json
+{ "env": { "MISSCLAUDE_URL": "http://100.x.x.x:27826", "MISSCLAUDE_TOKEN": "……" } }
+```
+
+hook 脚本、`missclaude.py` 和 skill 都读这两个变量；`MISSCLAUDE_URL` 可以用逗号写多个地址，hook 事件会发给每一只桌宠。
 
 ---
 

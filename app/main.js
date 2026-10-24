@@ -4,8 +4,10 @@
 // tells us where the pet's feet are; we place the window, run menus/tray, and host
 // the module interface (core/controller.js) with its localhost HTTP API.
 
-const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, net, protocol, screen } = require('electron');
+const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, net, protocol, screen, shell } = require('electron');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { PetController } = require('./core/controller');
@@ -247,6 +249,8 @@ function menuTemplate() {
     item('到处走走', 'wander', (m) => updateSetting('wander', m.checked), { type: 'checkbox', checked: settings.wander }),
     item('安静模式', 'quiet', (m) => updateSetting('quiet', m.checked), { type: 'checkbox', checked: settings.quiet }),
     { label: '大小', submenu: [sizeItem('小', 'small'), sizeItem('中', 'medium'), sizeItem('大', 'large')] },
+    item('允许其他电脑连接', 'remote', (m) => setRemote(m.checked), { type: 'checkbox', checked: remoteOn() }),
+    ...(remoteOn() ? [item('连接信息…', 'connect-info', showConnectInfo)] : []),
     item('总在最前', 'onTop', (m) => { updateSetting('onTop', m.checked); win?.setAlwaysOnTop(m.checked); },
       { type: 'checkbox', checked: settings.onTop }),
     item('开机自启动', 'autostart', (m) => app.setLoginItemSettings({ openAtLogin: m.checked }),
@@ -264,10 +268,67 @@ function restart() {
   app.exit(0);
 }
 
-// another pack: everything (window, art, API capabilities) is built for one, so relaunch
-function setCharacter(name) {
-  if (name === settings.character) return;
-  settings.character = name;
+// ---------- remote access: the API open to other machines, behind a token ----------
+
+const remoteOn = () => !['127.0.0.1', '::1', 'localhost', ''].includes(settings.apiHost || '127.0.0.1');
+
+function lanAddresses() {
+  const out = [];
+  for (const [name, addrs] of Object.entries(os.networkInterfaces())) {
+    for (const a of addrs || []) {
+      if (a.family === 'IPv4' && !a.internal) out.push(`${a.address}  (${name})`);
+    }
+  }
+  return out;
+}
+
+// what another machine needs, as a text file (message boxes cannot be copied from)
+function showConnectInfo() {
+  const lines = [
+    `MissClaude 远程连接信息  ${new Date().toLocaleString()}`,
+    '',
+    `端口: ${settings.apiPort}   监听: ${settings.apiHost}`,
+    `token: ${settings.apiToken}`,
+    '',
+    '这台电脑的地址（局域网里用局域网 IP，装了 Tailscale 用 100.x 开头的那个）:',
+    ...lanAddresses().map((a) => `  ${a}`),
+    '',
+    '第一次要放行防火墙（管理员 PowerShell 运行一次）:',
+    `  New-NetFirewallRule -DisplayName MissClaude -Direction Inbound -Protocol TCP -LocalPort ${settings.apiPort} -Action Allow`,
+    '',
+    '另一台电脑上（Claude Code 所在的机器）设置环境变量，hook 脚本、命令行和 skill 就都会指到这里:',
+    `  MISSCLAUDE_URL=http://<这台电脑的IP>:${settings.apiPort}`,
+    `  MISSCLAUDE_TOKEN=${settings.apiToken}`,
+    '  （写进 Claude Code 的 ~/.claude/settings.json 的 "env" 里最省事）',
+    '',
+    '直接试一下:',
+    `  curl -H "Authorization: Bearer ${settings.apiToken}" http://<IP>:${settings.apiPort}/v1/health`,
+    '',
+  ];
+  const file = userFile('connect.txt');
+  try {
+    fs.writeFileSync(file, lines.join('\r\n'));
+    shell.openPath(file);
+  } catch (err) {
+    logError('connect info:', err);
+  }
+}
+
+// on: a token is generated once, the API listens on every interface, and the
+// connection details open in a text file; off: back to this machine only. Relaunches.
+function setRemote(on) {
+  if (on) {
+    if (!settings.apiToken) settings.apiToken = crypto.randomBytes(18).toString('base64url');
+    settings.apiHost = '0.0.0.0';
+  } else {
+    settings.apiHost = '127.0.0.1';
+  }
+  saveSettingsNow();
+  if (on) showConnectInfo();
+  setTimeout(restart, on ? 800 : 0);
+}
+
+function saveSettingsNow() {
   clearTimeout(saveTimer);
   saveTimer = null;
   try {
@@ -278,6 +339,13 @@ function setCharacter(name) {
   } catch (err) {
     logError('saving settings failed:', err);
   }
+}
+
+// another pack: everything (window, art, API capabilities) is built for one, so relaunch
+function setCharacter(name) {
+  if (name === settings.character) return;
+  settings.character = name;
+  saveSettingsNow();
   restart();
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "missclaude",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Claude as a desktop pet: skeletal animation, an action library and a local API so other products can drive her",
   "private": true,
   "scripts": {
