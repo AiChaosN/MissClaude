@@ -412,13 +412,16 @@ python3 examples/alarm_demo.py          # 给下一分钟装一条闹铃规则�
 }
 ```
 
-脚本超时 1 秒、始终返回 0。桌宠没运行时，Claude Code 不会被拖慢，也不会被拦住。建议每个 hook 加 `"async": true`，
-`PreToolUse` / `PostToolUse` 也可以接上（她会坐到桌前干活）。
+脚本始终返回 0，发给桌宠的请求 2 秒超时。桌宠没运行时，Claude Code 不会被拖慢，也不会被拦住。每个 hook 加
+`"async": true`，`Stop` 的 `timeout` 给到 60（模型总结要几秒）；`PreToolUse` / `PostToolUse` 也接上（她会坐到桌前干活）。
 
 她对各事件的反应：`SessionStart` 打招呼；`UserPromptSubmit` 收到任务、坐到书桌前；工具调用期间一直在写字；
-`Notification` 举手提醒你（短消息直接念出来）；**`Stop` 时把 Claude 这一轮回复的要点念出来**——脚本会从
-hook 的 `last_assistant_message`（或 transcript）取最后一条回复，桌宠端把它压成一句（去掉 markdown，
-取第一段的第一两句，最多 72 字）；`SubagentStop` 冒星星。
+`Notification` 举手提醒你（短消息直接念出来）；**`Stop` 时把 Claude 这一轮回复的要点念出来**——脚本从
+hook 的 `last_assistant_message`（或 transcript）取最后一条回复，先用一个小模型（`claude -p --model haiku`，
+约 5–8 秒，hook 是 async 的所以不拖慢 Claude Code）按桌宠的口吻压成一句不超过 20 字的话（她是元气少女，
+腊肠是会说"汪"的狗）；压不出来（没装 claude、超时、输出太长）就由桌宠端机械截断（去掉 markdown，取第一段的
+第一两句，最多 72 字）。`MISSCLAUDE_SUMMARY=0` 关掉模型总结，`MISSCLAUDE_SUMMARY_MODEL` 换模型。
+`SubagentStop` 冒星星。
 
 脚本认的环境变量：`MISSCLAUDE_URL`（默认 `http://127.0.0.1:27826`）、`MISSCLAUDE_TOKEN`（桌宠在别的电脑上时）。
 
