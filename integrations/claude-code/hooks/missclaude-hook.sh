@@ -13,11 +13,12 @@
 # Environment: MISSCLAUDE_URL (default http://127.0.0.1:27826; several pets:
 # comma-separated), MISSCLAUDE_TOKEN (a pet on another machine; one token for all),
 # MISSCLAUDE_SUMMARY=0 to skip the model summary, MISSCLAUDE_SUMMARY_MODEL (haiku),
-# MISSCLAUDE_PORT (older installs).
+# MISSCLAUDE_MIRROR=0 to send nothing at all, MISSCLAUDE_PORT (older installs).
 URLS="${MISSCLAUDE_URL:-http://127.0.0.1:${MISSCLAUDE_PORT:-27826}}"
 AUTH=""
 [ -n "${MISSCLAUDE_TOKEN:-}" ] && AUTH="Authorization: Bearer ${MISSCLAUDE_TOKEN}"
 [ -n "${MISSCLAUDE_SUMMARIZING:-}" ] && exit 0  # a hook of our own summary run: ignore
+[ "${MISSCLAUDE_MIRROR:-1}" = "0" ] && exit 0    # a session that speaks as her (companion/): no mirroring
 
 payload=$(cat)
 if command -v python3 >/dev/null 2>&1; then

@@ -429,8 +429,8 @@ export class ClaudePet extends Pet {
       const next = this.afterWork;
       this.afterWork = null;
       this.workPhase = null;
-      if (next && this.playAction(next)) return;
       this.setState('idle');
+      if (next) this.act(next); // what she got up for: a performance or one of her own states
     }
   }
 
@@ -504,7 +504,12 @@ export class ClaudePet extends Pet {
   act(action, opts = {}) {
     if (['drag', 'fall'].includes(this.state)) return;
     if (WORK_STATES.includes(this.state) && !['work', 'work_end', 'chatter'].includes(action)) {
-      if (action === 'idle') this.endWork();
+      // asked for something else while at the desk: pack up first, then do it
+      // (an explicit command outranks the Claude Code routine that sat her down)
+      if (action !== 'idle' && (this.ch.actions[action] || ['wave', 'cheer', 'think', 'sit', 'sleep', 'walk'].includes(action))) {
+        this.afterWork = action;
+      }
+      this.endWork();
       return;
     }
     switch (action) {

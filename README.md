@@ -252,6 +252,7 @@ app/                      Electron 应用（部署时整个目录被同步到 Wi
   characters/lachang/     腊肠犬角色包：一套骨骼（站 + 小跑）、坐/趴/睡/讨食整图、16 个动作；素材管线在 tools/lachang/
 clients/python/           Python 客户端 + 命令行
 integrations/claude-code/ Claude Code 插件：hooks（她陪着干活、念每轮回复的总结）+ skill（让 Claude Code 会使唤她）
+companion/                在这里开 `claude --model haiku`，这个会话就是她本人：以她的口吻陪聊、配动作、记闹铃
 examples/usage_demo.py    模拟用量曲线，演示规则触发
 examples/alarm_demo.py    闹铃：一条 clock 规则 + 一段表演，点她可以贪睡
 tools/                    素材管线（build_assets / build_rig / export_assets）、预览、录制、Windows 部署、release 打包

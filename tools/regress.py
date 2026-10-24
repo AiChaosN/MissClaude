@@ -25,11 +25,18 @@ from playwright.sync_api import sync_playwright
 
 APP = Path(__file__).resolve().parent.parent / "app"
 SIZE = 220
-# mulberry32, seeded; installed before any script runs
+# mulberry32, seeded, and a clock pinned to a fixed afternoon (the greeting depends on
+# the time of day, and its length changes how much randomness the lip-sync consumes);
+# installed before any script runs
 SEED_JS = """
 (() => { let s = 0x9E3779B9; Math.random = () => { s |= 0; s = (s + 0x6D2B79F5) | 0;
   let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; })();
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const RealDate = Date; const fixed = new RealDate(2026, 0, 1, 15, 0, 0).getTime();
+  globalThis.Date = class extends RealDate {
+    constructor(...a) { super(...(a.length ? a : [fixed])); }
+    static now() { return fixed; }
+  }; })();
 """
 # name -> (setup js, [frames to step before each capture])
 SCENARIOS = {

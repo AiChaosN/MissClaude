@@ -38,6 +38,7 @@ hook 和 skill 都读这两个变量。`MISSCLAUDE_URL` 可以用逗号写多个
 | `MISSCLAUDE_TOKEN` | 远程桌宠的 token |
 | `MISSCLAUDE_SUMMARY=0` | 关掉模型总结，改为桌宠端截取第一句 |
 | `MISSCLAUDE_SUMMARY_MODEL` | 总结用的模型（默认 `haiku`） |
+| `MISSCLAUDE_MIRROR=0` | 这个会话什么都不转发（`companion/` 里"以她的身份聊天"的会话用它） |
 
 ## 里面有什么
 
@@ -45,7 +46,8 @@ hook 和 skill 都读这两个变量。`MISSCLAUDE_URL` 可以用逗号写多个
 .claude-plugin/plugin.json      插件清单
 hooks/hooks.json                七个事件都指向 hooks/missclaude-hook.sh（async；Stop 给 60 秒做总结）
 hooks/missclaude-hook.sh        把 hook 的 JSON 转发给桌宠；Stop 时附上回复的总结
-skills/missclaude/SKILL.md      教 Claude Code 怎么用桌宠（curl 即可，不依赖仓库路径）
+skills/missclaude/SKILL.md      教 Claude Code 怎么用桌宠，以及"作为她本人聊天"时怎么表现
+skills/missclaude/pet.sh        模型用的命令行：state / say / act / expr / perform / signal / remind / forget / events，自己读地址和 token
 ```
 
 不想装插件也可以手工配：hook 命令指向这个脚本的绝对路径，skill 复制到 `~/.claude/skills/missclaude/`。
