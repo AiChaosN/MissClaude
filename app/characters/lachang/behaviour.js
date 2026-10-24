@@ -256,7 +256,7 @@ export class LachangPet extends Pet {
         break;
       case 'Stop':
         this.working = false;
-        say(this.pick('ccDone'), 'high');
+        say(text || this.pick('ccDone'), 'high');
         if (RESTING.includes(this.state)) this.setState('idle');
         this.playAction(Math.random() < 0.5 ? 'wag' : 'dance');
         break;

@@ -4,11 +4,27 @@
 // Requests carrying an Origin header are refused: every browser sends one on
 // cross-site requests, so a web page cannot drive the pet, while curl, Python and
 // the Claude Code hook (which never send Origin) can.
+//
+// Other machines: with `host` set to a LAN address (or 0.0.0.0) a `token` is
+// required, and every request that does not come from this machine must carry
+// `Authorization: Bearer <token>`. Local callers (hooks, the menu) keep working
+// without it. The admin and debug routes stay local-only whatever the token.
 
+const crypto = require('node:crypto');
 const http = require('node:http');
 const { InputError } = require('./controller');
 
 const MAX_BODY = 64 * 1024;
+
+function isLoopback(address) {
+  return address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
+}
+
+function tokenMatches(header, token) {
+  const given = Buffer.from(String(header || '').replace(/^Bearer\s+/i, ''));
+  const want = Buffer.from(token);
+  return given.length === want.length && crypto.timingSafeEqual(given, want);
+}
 
 function reply(res, code, body) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -69,13 +85,43 @@ function streamEvents(controller, req, res, url) {
   });
 }
 
+// token: required from non-local clients; trustLocal: loopback connections skip it
+// (tests set it to false to exercise the token path from this machine)
 function createApiServer(controller, {
-  port, host = '127.0.0.1', extraState = () => ({}), onRulesChanged, capture, restart,
+  port, host = '127.0.0.1', token = '', trustLocal = true, extraState = () => ({}), onRulesChanged, capture, restart,
 }) {
+  if (!isLoopback(host) && host !== 'localhost' && !token) {
+    throw new Error('refusing to listen on a non-local address without a token');
+  }
+  // A response sent before the request body was read makes Node drop the connection
+  // afterwards, and a keep-alive client is then reset on its next request: routes
+  // that never read their body (and refusals) drain it first.
+  const drain = (req) => new Promise((resolve) => {
+    if (req.complete) return resolve();
+    req.resume();
+    req.once('end', resolve);
+    req.once('error', resolve);
+    req.once('close', resolve);
+  });
+  const refuse = async (req, res, code, error) => {
+    await drain(req);
+    res.setHeader('Connection', 'close');
+    return reply(res, code, { error });
+  };
   const server = http.createServer(async (req, res) => {
-    if (req.headers.origin) return reply(res, 403, { error: 'requests from web pages are not accepted' });
+    if (req.headers.origin) return refuse(req, res, 403, 'requests from web pages are not accepted');
+    const local = trustLocal && isLoopback(req.socket.remoteAddress);
+    if (!local && (!token || !tokenMatches(req.headers.authorization, token))) {
+      res.setHeader('WWW-Authenticate', 'Bearer');
+      return refuse(req, res, 401, token ? 'bad or missing token' : 'remote access is off');
+    }
     const url = new URL(req.url, 'http://127.0.0.1');
     const route = `${req.method} ${url.pathname.replace(/\/+$/, '') || '/'}`;
+    if (!local && /^\/v1\/(admin|debug)\//.test(url.pathname)) {
+      return refuse(req, res, 403, 'only from this machine');
+    }
+    if (!/^(POST|PUT) \/v1\/(say|act|expression|perform|signal|rules|hooks\/claude-code)$/.test(route)
+        && route !== 'GET /v1/events') await drain(req);
     try {
       switch (route) {
         case 'GET /v1/health':
@@ -154,4 +200,4 @@ function createApiServer(controller, {
   return server;
 }
 
-module.exports = { createApiServer };
+module.exports = { createApiServer, isLoopback };

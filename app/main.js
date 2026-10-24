@@ -17,6 +17,10 @@ const DEFAULTS = {
   // outside Windows' dynamic range and WSL's mirrored-networking ephemeral range
   // (44620-48715 here), both of which refuse a bind from a Windows process
   apiPort: 27826, webhooks: [],
+  // other machines: apiHost "0.0.0.0" (or a LAN address) plus a secret apiToken that
+  // remote callers send as "Authorization: Bearer <token>"; without a token the API
+  // stays local whatever apiHost says
+  apiHost: '127.0.0.1', apiToken: '',
 };
 
 protocol.registerSchemesAsPrivileged([
@@ -219,7 +223,7 @@ function setSize(size) {
 function updateSetting(key, value) {
   settings[key] = value;
   saveSettings();
-  send({ type: 'settings', settings });
+  send({ type: 'settings', settings: rendererSettings() });
   refreshMenus();
 }
 
@@ -313,7 +317,10 @@ function startWebhooks() {
 
 // ---------- IPC ----------
 
-ipcMain.handle('pet:init', () => ({ layout: layout(), foot, displays: displays(), settings }));
+// the renderer gets the settings it acts on, not the API secret
+const rendererSettings = () => ({ ...settings, apiToken: undefined });
+
+ipcMain.handle('pet:init', () => ({ layout: layout(), foot, displays: displays(), settings: rendererSettings() }));
 ipcMain.handle('pet:cursor', () => screen.getCursorScreenPoint());
 ipcMain.on('pet:move', (_e, x, y) => {
   if (Number.isFinite(x) && Number.isFinite(y)) moveWindow({ x, y });
@@ -348,11 +355,19 @@ app.whenReady().then(() => {
     return net.fetch(pathToFileURL(file).toString());
   });
   // the API comes up first so other modules can connect even if UI pieces fail
+  let apiHost = settings.apiHost || '127.0.0.1';
+  if (!['127.0.0.1', '::1', 'localhost'].includes(apiHost) && !settings.apiToken) {
+    logError(`apiHost ${apiHost} needs an apiToken in settings.json; listening on 127.0.0.1 only`);
+    apiHost = '127.0.0.1';
+  }
   const api = createApiServer(controller, {
     port: settings.apiPort,
+    host: apiHost,
+    token: settings.apiToken || '',
     extraState: () => ({
       visible: Boolean(win && win.isVisible()),
       character: settings.character,
+      api: { host: apiHost, port: settings.apiPort, tokenRequired: Boolean(settings.apiToken) },
       foot,
       size: settings.size,
       quiet: settings.quiet,

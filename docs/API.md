@@ -28,7 +28,7 @@
 
 | 项 | 值 |
 |---|---|
-| 地址 | `http://127.0.0.1:27826/v1`（只监听本机） |
+| 地址 | `http://127.0.0.1:27826/v1`（默认只监听本机；跨机器见下面"从另一台电脑访问"） |
 | 格式 | 请求体和响应都是 JSON（UTF-8） |
 | 端口 | `settings.json` 里的 `apiPort` |
 | WSL | 开了 `networkingMode=mirrored`，WSL 里直接用 `127.0.0.1` 就能访问 |
@@ -37,7 +37,35 @@
 > 为什么不用 47826 一类的端口：WSL 镜像网络会把 Linux 的临时端口段（本机是 44620–48715）在 Windows
 > 侧整段预留，Windows 程序绑定这个范围里的端口会报 `EADDRINUSE`；49152 以上又是 Windows 的动态端口范围。
 
-错误统一返回 `{"error": "说明"}`：参数错误 400、网页来源 403、路由不存在 404。
+错误统一返回 `{"error": "说明"}`：参数错误 400、缺少或错误的 token 401、网页来源/远程不允许的路由 403、路由不存在 404。
+
+### 从另一台电脑访问
+
+桌宠是服务端，模型或脚本是客户端。默认只开本机，因为接口本身没有身份——谁连上端口谁就能让她说话。
+要让 B 电脑上的程序驱动 A 电脑上的她，在 A 的 `settings.json` 里加两项，重启：
+
+```json
+{ "apiHost": "0.0.0.0", "apiToken": "一串随机的长字符串" }
+```
+
+- `apiHost`：`0.0.0.0` 监听所有网卡，或者只填某一块网卡的地址；**没有 `apiToken` 时不会对外监听**（日志里会说明，退回 127.0.0.1）。
+- 不是本机发来的请求必须带 `Authorization: Bearer <apiToken>`，否则 401；本机的调用（hook 脚本、菜单）不用带。
+- `/v1/admin/*` 和 `/v1/debug/*` 只接受本机，带了 token 也是 403。
+- Windows 防火墙要放行这个端口（管理员 PowerShell）：
+  `New-NetFirewallRule -DisplayName MissClaude -Direction Inbound -Protocol TCP -LocalPort 27826 -Action Allow`
+- `GET /v1/state` 的 `api` 字段显示当前监听地址和是否要 token。
+
+B 上：
+
+```bash
+export MISSCLAUDE_URL=http://192.168.1.20:27826 MISSCLAUDE_TOKEN=一串随机的长字符串
+python3 clients/python/missclaude.py say "B 电脑来的问候"
+curl -H "Authorization: Bearer $MISSCLAUDE_TOKEN" -X POST $MISSCLAUDE_URL/v1/signal \
+     -H 'Content-Type: application/json' -d '{"name": "build", "value": {"status": "failed"}}'
+```
+
+不在一个局域网：用 Tailscale 之类组网后同样做法；或者不开 `apiHost`，在 B 上 `ssh -N -L 27826:127.0.0.1:27826 user@A`，
+把 A 的端口转到 B 本机。传输没有加密，token 走的是明文 HTTP，所以只在可信网络（局域网、VPN）里用。
 
 ---
 
@@ -373,4 +401,16 @@ python3 examples/alarm_demo.py          # 给下一分钟装一条闹铃规则�
 }
 ```
 
-脚本超时 1 秒、始终返回 0。桌宠没运行时，Claude Code 不会被拖慢，也不会被拦住。
+脚本超时 1 秒、始终返回 0。桌宠没运行时，Claude Code 不会被拖慢，也不会被拦住。建议每个 hook 加 `"async": true`，
+`PreToolUse` / `PostToolUse` 也可以接上（她会坐到桌前干活）。
+
+她对各事件的反应：`SessionStart` 打招呼；`UserPromptSubmit` 收到任务、坐到书桌前；工具调用期间一直在写字；
+`Notification` 举手提醒你（短消息直接念出来）；**`Stop` 时把 Claude 这一轮回复的要点念出来**——脚本会从
+hook 的 `last_assistant_message`（或 transcript）取最后一条回复，桌宠端把它压成一句（去掉 markdown，
+取第一段的第一两句，最多 72 字）；`SubagentStop` 冒星星。
+
+脚本认的环境变量：`MISSCLAUDE_URL`（默认 `http://127.0.0.1:27826`）、`MISSCLAUDE_TOKEN`（桌宠在别的电脑上时）。
+
+反过来让 Claude Code **主动**使唤她（提醒、闹铃、播报），给它一个 skill 就行：仓库里的
+`integrations/claude-code/SKILL.md` 复制到 `~/.claude/skills/missclaude/SKILL.md`，之后对 Claude Code 说
+"三点半让桌宠叫我"，它会往她的规则里写一条 `clock` 规则——提醒由桌宠自己保管，Claude Code 退出了也照样响。

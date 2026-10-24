@@ -28,6 +28,8 @@ import urllib.request
 from typing import Any, Iterator
 
 DEFAULT_URL = os.environ.get("MISSCLAUDE_URL", "http://127.0.0.1:27826")
+# needed when the pet is on another machine (its settings.json: apiHost + apiToken)
+DEFAULT_TOKEN = os.environ.get("MISSCLAUDE_TOKEN", "")
 
 
 class MissClaudeError(RuntimeError):
@@ -35,16 +37,17 @@ class MissClaudeError(RuntimeError):
 
 
 class MissClaude:
-    def __init__(self, base_url: str = DEFAULT_URL, timeout: float = 3.0):
+    def __init__(self, base_url: str = DEFAULT_URL, timeout: float = 3.0, token: str = DEFAULT_TOKEN):
         self.base = base_url.rstrip("/") + "/v1"
         self.timeout = timeout
+        self.headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     # ---- plumbing ----
 
     def _call(self, method: str, path: str, body: Any = None) -> Any:
         data = None if body is None else json.dumps(body).encode()
         req = urllib.request.Request(self.base + path, data=data, method=method,
-                                     headers={"Content-Type": "application/json"})
+                                     headers={"Content-Type": "application/json", **self.headers})
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 return json.loads(resp.read() or b"null")
@@ -132,7 +135,7 @@ class MissClaude:
         last_id = None
         while True:
             url = self.base + "/events" + (f"?types={','.join(types)}" if types else "")
-            headers = {"Accept": "text/event-stream"}
+            headers = {"Accept": "text/event-stream", **self.headers}
             if last_id is not None:
                 headers["Last-Event-ID"] = str(last_id)
             try:
@@ -156,6 +159,7 @@ class MissClaude:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Talk to the MissClaude desktop pet.")
     ap.add_argument("--url", default=DEFAULT_URL)
+    ap.add_argument("--token", default=DEFAULT_TOKEN, help="for a pet on another machine (or MISSCLAUDE_TOKEN)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("say")
     p.add_argument("text")
@@ -182,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
         sub.add_parser(name)
     args = ap.parse_args(argv)
 
-    pet = MissClaude(args.url)
+    pet = MissClaude(args.url, token=args.token)
     try:
         if args.cmd == "say":
             out = pet.say(args.text, expression=args.expression, duration=args.duration, priority=args.priority)

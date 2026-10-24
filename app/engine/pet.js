@@ -1041,7 +1041,7 @@ export class Pet {
         break;
       case 'Stop':
         this.working = false;
-        say(this.pick('ccDone'), 'high');
+        say(text || this.pick('ccDone'), 'high');
         this.playAction(this.ch.reactions.done);
         break;
       case 'SubagentStop': { const h = this.headNow(); this.fx.sparkles(h.x, h.y, this.k, 3); break; }

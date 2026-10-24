@@ -6,7 +6,7 @@ const http = require('node:http');
 const test = require('node:test');
 const { RuleEngine, renderTemplate } = require('../app/core/rules');
 const { PetController } = require('../app/core/controller');
-const { createApiServer } = require('../app/core/server');
+const { createApiServer, isLoopback } = require('../app/core/server');
 const defaultRules = require('../app/core/default-rules.json');
 
 test('level rule fires, then respects its cooldown', () => {
@@ -195,5 +195,33 @@ test('HTTP API: inputs, validation, origin guard and the SSE event stream', asyn
   } finally {
     server.close();
     c.stopClock();
+  }
+});
+
+test('remote access: token required unless the caller is this machine, admin stays local', async () => {
+  assert.ok(isLoopback('127.0.0.1') && isLoopback('::1') && isLoopback('::ffff:127.0.0.1') && !isLoopback('192.168.1.5'));
+  assert.throws(() => createApiServer(new PetController({ send() {} }), { port: 0, host: '0.0.0.0' }), /without a token/);
+  const c = new PetController({ send() {} });
+  // trustLocal off: this test's loopback requests are treated like remote ones
+  const server = createApiServer(c, { port: 0, token: 's3cret', trustLocal: false, restart() {} });
+  await new Promise((r) => server.once('listening', r));
+  const { port } = server.address();
+  try {
+    assert.equal((await request(port, 'GET', '/v1/health')).status, 401);
+    assert.equal((await request(port, 'GET', '/v1/health', undefined, { Authorization: 'Bearer wrong' })).status, 401);
+    assert.equal((await request(port, 'GET', '/v1/health', undefined, { Authorization: 'Bearer s3cret' })).status, 200);
+    assert.equal((await request(port, 'POST', '/v1/say', { text: 'hi' }, { Authorization: 'Bearer s3cret' })).status, 200);
+    assert.equal((await request(port, 'POST', '/v1/admin/restart', {}, { Authorization: 'Bearer s3cret' })).status, 403);
+  } finally {
+    server.close();
+    c.stopClock();
+  }
+  // the default: local callers never need the token
+  const local = createApiServer(c, { port: 0, token: 's3cret' });
+  await new Promise((r) => local.once('listening', r));
+  try {
+    assert.equal((await request(local.address().port, 'GET', '/v1/health')).status, 200);
+  } finally {
+    local.close();
   }
 });

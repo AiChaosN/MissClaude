@@ -548,7 +548,7 @@ export class ClaudePet extends Pet {
       case 'Stop':
         this.working = false;
         this.workUntil = 0;
-        say(this.pick('ccDone'), 'high');
+        say(text || this.pick('ccDone'), 'high');
         if (WORK_STATES.includes(this.state)) this.afterWork = 'cheer_on';
         else if (!this.playAction('cheer_on')) this.setState('cheer');
         break;

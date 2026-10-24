@@ -175,12 +175,15 @@ class PetController extends EventEmitter {
     this.timers.add(done);
   }
 
-  // Claude Code hook payload (the JSON a hook command receives on stdin).
+  // Claude Code hook payload (the JSON a hook command receives on stdin). `text` is
+  // what the hook script attaches: Claude's last reply on Stop, which the pet speaks
+  // in brief; `message` is a Notification's text.
   claudeCode(payload = {}) {
     const event = String(payload.hook_event_name || '');
     if (!event) throw new InputError('payload has no hook_event_name');
-    this.send({ type: 'claude_code', event, text: String(payload.message || '').slice(0, MAX_TEXT) });
-    this.publish('claude_code', { event });
+    const text = event === 'Stop' || event === 'SubagentStop' ? briefReply(payload.text) : String(payload.message || '');
+    this.send({ type: 'claude_code', event, text: text.slice(0, MAX_TEXT) });
+    this.publish('claude_code', { event, ...(text ? { text } : {}) });
     return { ok: true };
   }
 
@@ -252,6 +255,31 @@ class PetController extends EventEmitter {
   }
 }
 
+// A reply of any length as one bubble line: no markdown furniture, the first
+// sentence or so, cut at BRIEF_CHARS with an ellipsis.
+const BRIEF_CHARS = 72;
+function briefReply(text) {
+  let s = String(text || '');
+  if (!s.trim()) return '';
+  s = s.replace(/```[\s\S]*?```/g, ' ') // code blocks
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/^\s{0,3}(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s+)/gm, '') // headings, bullets, quotes
+    .replace(/\*\*([^*]*)\*\*|__([^_]*)__/g, '$1$2')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links
+    .replace(/\|/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+  // the first real paragraph (a bare heading does not count), then its first
+  // sentence or two if that is still long
+  const paras = s.split(/\n\s*\n/).map((x) => x.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+  s = paras.find((x) => Array.from(x).length >= 8) || paras[0] || '';
+  const chars = Array.from(s);
+  if (chars.length <= BRIEF_CHARS) return s;
+  const head = chars.slice(0, BRIEF_CHARS).join('');
+  const cut = Math.max(...['。', '！', '？', '. ', '! ', '? ', '；', ';'].map((p) => head.lastIndexOf(p)));
+  return (cut >= 16 ? head.slice(0, cut + 1).trim() : head.trim()) + '…';
+}
+
 function num(v) {
   if (v === undefined || v === null || v === '') return undefined;
   const n = Number(v);
@@ -259,4 +287,4 @@ function num(v) {
   return n;
 }
 
-module.exports = { PetController, InputError, API_VERSION, EVENTS };
+module.exports = { PetController, InputError, API_VERSION, EVENTS, briefReply };

@@ -56,7 +56,7 @@ tools/deploy_windows.sh --shortcut
 - 接口有版本号（`/v1`）和自描述的 `/v1/capabilities`（动作、表情、事件、规则运算符、信号、上限），产品可以先查再用。
 - 核心 `app/core/controller.js` 不依赖 HTTP，想嵌进别的 Node/Electron 进程可以直接调用它的方法、订阅事件。
 - 规则改完保存即生效，也能通过接口整体替换；`cooldown` 和边沿触发（`crosses_above` 等）避免同一个状态反复触发。
-- 现在只能有一个实例、只在本机监听；多台机器或多人共用需要在前面再加一层。
+- 默认只监听本机。配上 `apiHost` + `apiToken` 就能让别的电脑上的程序（比如另一台机器上的模型）驱动她，远程请求要带 Bearer token，见 docs/API.md "从另一台电脑访问"。仍然只能有一个实例。
 - 台词的语气、她自己的碎碎念、动作库本身都在角色包里（`app/characters/claude/lines.js`、`actions.js`），产品改不了；产品能做的是用自己的话让她说。
 
 ## 怎么和她玩
