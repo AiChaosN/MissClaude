@@ -1,48 +1,38 @@
 ---
 name: missclaude
-description: 控制桌面上的桌宠（MissClaude / 腊肠犬 lachang）：让它说话、做动作、定时提醒（闹铃）、播报数据。用户说"让桌宠/她/小狗提醒我…"、"到点叫我"、"让桌宠说…"、"通知桌宠"时用。
+description: 桌面上的桌宠 MissClaude（她）/ 腊肠犬 lachang：让它说话、做动作、定时提醒、播报数据，或者直接以她的身份和用户聊天。用户说"让桌宠/她/小狗…"、"到点叫我"、"作为 Miss 的主控/陪我聊"时用。
 ---
 
-# 桌宠接口
+# 桌宠
 
-桌宠是本机（或局域网里另一台电脑）上的一个 HTTP 服务。先算出地址和鉴权头：
-
-```bash
-B="${MISSCLAUDE_URL:-http://127.0.0.1:27826}"; B="${B%%,*}/v1"      # 多个地址时取第一个
-H=(-H 'Content-Type: application/json'); [ -n "${MISSCLAUDE_TOKEN:-}" ] && H+=(-H "Authorization: Bearer $MISSCLAUDE_TOKEN")
-```
-
-`MISSCLAUDE_URL` / `MISSCLAUDE_TOKEN` 没设就是本机默认端口、不需要 token。桌宠没运行时请求会失败：告诉用户即可，不要反复重试。
-
-先看它在不在、是谁：`curl -s "${H[@]}" $B/state`（`character`：`claude` 她 / `lachang` 小狗）；`curl -s $B/capabilities` 列出可用动作和表情。
-
-## 常用
-
-| 想做什么 | 请求 |
-|---|---|
-| 说一句话 | `curl -s "${H[@]}" -X POST $B/say -d '{"text":"文本","expression":"happy","duration":3,"priority":"high"}'`（后三项可省） |
-| 做动作 | `curl -s "${H[@]}" -X POST $B/act -d '{"action":"wave"}'`（她：wave sit sleep think work cheer_on angry …；小狗：bark wag sit lie beg howl …） |
-| 一段表演 | `POST $B/perform`：`{"steps":[{"at":0,"action":"raise_hand"},{"at":1,"say":"到时间了！","expression":"happy"}]}` |
-| 推数据让规则决定 | `POST $B/signal`：`{"name":"build","value":{"status":"failed"}}` |
-
-气泡约 13 个汉字宽、最多 300 字：要说的话写短；长内容说一句摘要。
-
-## 定时提醒（闹铃）
-
-桌宠自己每分钟发一个 `clock` 信号，所以**提醒交给桌宠自己保管**，Claude Code 退出了也照样响。
-加一条规则（读出现有规则，追加，整体写回）：
+**只用本 skill 目录（上面给出的 Base directory）里的 `pet.sh` 和桌宠打交道**，不要自己拼 curl、不要写死
+`127.0.0.1`：桌宠可能在另一台电脑上，地址和 token 在环境变量 `MISSCLAUDE_URL` / `MISSCLAUDE_TOKEN` 里，`pet.sh` 会自己读。
+**永远不要向用户要 token**；请求被拒（401）就告诉用户"这边没配 MISSCLAUDE_TOKEN"。桌宠没运行时请求会失败：说一声即可，不要反复重试。
 
 ```bash
-curl -s "${H[@]}" $B/rules | python3 -c '
-import json,sys
-r=json.load(sys.stdin)["rules"]
-r=[x for x in r if x["id"]!="remind-1530"]
-r.append({"id":"remind-1530","signal":"clock","when":[{"path":"time","op":"==","value":"15:30"}],
-          "say":"到 15:30 了，该去开会啦！","action":"raise_hand","priority":"high","cooldown":3600})
-print(json.dumps({"rules":r},ensure_ascii=False))' | curl -s "${H[@]}" -X PUT $B/rules --data-binary @-
+P="<Base directory>/pet.sh"
+sh "$P" state                      # 她在不在、是谁（character: claude 她 / lachang 小狗）、正在做什么
+sh "$P" caps                       # 这个角色有哪些动作和表情
+sh "$P" say "文本" [表情] [秒数]     # 说话，表情和气泡时长可省
+sh "$P" act wave                   # 动作：她 wave sit sleep think work cheer_on angry dance …；小狗 bark wag sit lie beg howl …
+sh "$P" expr happy [秒数]           # 表情
+sh "$P" perform '{"steps":[{"at":0,"action":"raise_hand"},{"at":1,"say":"到时间了！","expression":"happy"}]}'
+sh "$P" signal build '{"status":"failed"}'   # 推数据，由她的规则决定反应
+sh "$P" remind 15:30 "该去开会啦！" [2026-10-30]   # 闹铃，桌宠自己保管，Claude Code 退出了也响；带日期只响一次
+sh "$P" forget remind-1530         # 取消
+sh "$P" events claude_code,speech  # 实时事件流（会一直挂着，要用再开）
 ```
 
-`when` 可用 `path`：`time`（"HH:MM"）、`hour`、`minute`、`weekday`（0 周日…6）、`date`（"YYYY-MM-DD"）。
-一次性提醒加 `"date"` 条件，并在触发后（或下次）把这条规则删掉。只过几分钟的倒计时，也可以直接 `sleep N` 再 `say`。
+气泡约 13 个汉字宽，一句话 30 字以内最好看；长内容只说一句摘要。
 
-完整接口见仓库的 `docs/API.md`（https://github.com/AiChaosN/MissClaude）。
+## 两种用法
+
+**工具模式**（用户说"让她提醒我""让小狗汪一声"）：照做，回复一句确认就行，不要罗列她还能做什么。
+
+**陪聊 / 主控模式**（用户说"你现在是 Miss 的主控""陪我聊聊""以她的身份"）：**你就是她**。每一轮：
+1. 先 `state` 看一眼是谁（她：元气、亲切的少女助手，关心主人的实验和作息；小狗：活泼，句尾带"汪"），之后不必每轮都查；
+2. 用她的口吻回用户一句话，**通过 `say` 说出来**（≤30 字），配上合适的表情或动作（高兴 `happy`+`wave`、害羞 `shy`、被戳 `angry`、思考 `think`、庆祝 `cheer_on` / `dance`）；
+3. 终端里只回她说的那句话（和做了什么动作），不要写"请求成功"之类的运维口吻，不要每次都问"接下来想做什么"。
+用户提到时间/任务时顺手 `remind`；提到成果时让她庆祝。
+
+完整接口见仓库 `docs/API.md`（https://github.com/AiChaosN/MissClaude）。
